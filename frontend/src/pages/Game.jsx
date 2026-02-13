@@ -30,6 +30,7 @@ export default function Game() {
   const [score, setScore] = useState(0);
   const [success, setSuccess] = useState(false);
   const [game2Unlocked, setGame2Unlocked] = useState(false);
+  const [introLaunched, setIntroLaunched] = useState(false);
 
   const [startTime, setStartTime] = useState(null);
   const [duration, setDuration] = useState(1);
@@ -138,6 +139,12 @@ export default function Game() {
     });
   };
 
+  const launchQuizFromIntro = () => {
+    if (introLaunched) return;
+    setIntroLaunched(true);
+    socket.emit("startQuizFromIntro", code);
+  };
+
   if (quizEnded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-600 to-blue-800 flex items-center justify-center p-6 text-white">
@@ -208,7 +215,15 @@ export default function Game() {
             <div className="rounded-xl bg-white/10 p-3">Temps de réponse: 20s</div>
             <div className="rounded-xl bg-white/10 p-3">Objectif: débloquer l&apos;épreuve 2</div>
           </div>
-          <p className="mt-6 text-sm opacity-80">Le quiz démarre automatiquement...</p>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: introLaunched ? 1 : 1.03 }}
+            onClick={launchQuizFromIntro}
+            disabled={introLaunched}
+            className="mt-6 bg-white text-blue-900 px-6 py-3 rounded-xl font-semibold disabled:opacity-60"
+          >
+            {introLaunched ? "Lancement..." : "Commencer l'épreuve 1"}
+          </motion.button>
         </motion.div>
       </div>
     );

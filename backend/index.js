@@ -330,6 +330,7 @@ function createInitialGame2State() {
     startedAt: null,
     completedAt: null,
     wordEntries: [],
+    wordValidationEntries: [],
     validatedWords: [],
     wordsSolved: false,
     puzzleAssignments: [],
@@ -403,6 +404,7 @@ function getSessionState(roomCode) {
       startedAt: state.game2.startedAt,
       completedAt: state.game2.completedAt,
       wordEntries: state.game2.wordEntries,
+      wordValidationEntries: state.game2.wordValidationEntries,
       validatedWords: state.game2.validatedWords,
       wordsSolved: state.game2.wordsSolved,
       puzzleAssignments: state.game2.puzzleAssignments,
@@ -632,6 +634,11 @@ io.on("connection", (socket) => {
     startQuiz(roomCode);
   });
 
+  socket.on("startQuizFromIntro", (roomCode) => {
+    if (!roomCode) return;
+    startQuizFromIntro(roomCode);
+  });
+
   socket.on("startGame4", (roomCode) => {
     if (!roomCode) return;
     startGame4(roomCode);
@@ -666,6 +673,7 @@ io.on("connection", (socket) => {
     const validation = buildWordValidation(words);
 
     state.game2.wordEntries = validation.entries.map((entry) => entry.input);
+    state.game2.wordValidationEntries = validation.entries;
     state.game2.validatedWords = validation.entries
       .filter((entry) => entry.status === "valid")
       .map((entry) => entry.normalized);
@@ -899,13 +907,20 @@ async function startQuiz(roomCode) {
 
   io.to(roomCode).emit("phase", {
     type: "INTRO",
-    duration: 12000,
+    duration: 0,
     startTime: Date.now(),
   });
 
   emitSessionStateToRoom(roomCode);
+}
 
-  await wait(12000);
+function startQuizFromIntro(roomCode) {
+  const state = ROOM_STATES[roomCode];
+  if (!state || state.quizEnded) return;
+  if (state.phase !== "INTRO") return;
+
+  state.phase = "LOADING";
+  emitSessionStateToRoom(roomCode);
   runQuiz(roomCode);
 }
 

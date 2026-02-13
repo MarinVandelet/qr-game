@@ -41,6 +41,7 @@ export default function Game2() {
   const [rightItems, setRightItems] = useState([]);
   const [assignmentsMap, setAssignmentsMap] = useState({});
   const [validatedWords, setValidatedWords] = useState([]);
+  const [wordValidationEntries, setWordValidationEntries] = useState([]);
 
   const devPairs = [
     { id: "web-dev", leftLabel: "Développeur web", rightLabel: "HTML" },
@@ -89,6 +90,7 @@ export default function Game2() {
       setAssignmentsMap(toAssignmentsMap(game2.puzzleAssignments));
       setGame3Unlocked(Boolean(session?.game3?.unlocked));
       setValidatedWords(game2.validatedWords || []);
+      setWordValidationEntries(game2.wordValidationEntries || []);
 
       if (Array.isArray(game2.wordEntries) && game2.wordEntries.length > 0) {
         setWords((prev) => {
@@ -121,6 +123,9 @@ export default function Game2() {
       if (Array.isArray(payload?.validatedWords)) {
         setValidatedWords(payload.validatedWords);
       }
+      if (Array.isArray(payload?.entries)) {
+        setWordValidationEntries(payload.entries);
+      }
     });
 
     socket.on("game2PuzzleResult", (payload) => {
@@ -149,12 +154,8 @@ export default function Game2() {
   }, []);
 
   const lockedIndices = useMemo(
-    () =>
-      words.map((word) => {
-        const normalized = normalizeWord(word);
-        return normalized && validatedWords.includes(normalized);
-      }),
-    [words, validatedWords]
+    () => words.map((_, idx) => wordValidationEntries[idx]?.status === "valid"),
+    [words, wordValidationEntries]
   );
 
   const step = useMemo(() => {
@@ -225,6 +226,7 @@ export default function Game2() {
         missingLeftLabels,
         validatedWords: validated,
       });
+      setWordValidationEntries(entries);
       if (success) setWordsSolved(true);
       return;
     }
