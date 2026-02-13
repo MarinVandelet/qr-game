@@ -166,7 +166,7 @@ export default function Game2() {
 
     socket.on("ownerActionDenied", (payload) => {
       setOwnerOnlyMessage(
-        payload?.message || "Seul le proprietaire de la partie peut lancer."
+        payload?.message || "Seul le propriétaire de la partie peut lancer."
       );
     });
 
@@ -342,7 +342,7 @@ export default function Game2() {
 
     if (!isOwner) {
       setOwnerOnlyMessage(
-        "Seul le proprietaire de la partie peut lancer l'epreuve."
+        "Seul le propriétaire de la partie peut lancer l'épreuve."
       );
       return;
     }
@@ -416,7 +416,7 @@ export default function Game2() {
 
         {step === "WORDS" && (
           <div>
-            <h2 className="text-xl font-bold mb-2">Etape 1: Saisir les 6 mots QR</h2>
+            <h2 className="text-xl font-bold mb-2">Étape 1: Saisir les 6 mots QR</h2>
             <p className="opacity-80 mb-5">
               Les mots validés deviennent verts et verrouillés automatiquement.
             </p>
@@ -471,7 +471,7 @@ export default function Game2() {
 
         {step === "PUZZLE" && (
           <div>
-            <h2 className="text-xl font-bold mb-2">Etape 2: Associer métier et outil</h2>
+            <h2 className="text-xl font-bold mb-2">Étape 2: Associer métier et outil</h2>
             <p className="opacity-80 mb-5">
               Associez chaque métier MMI avec le bon outil/compétence.
             </p>

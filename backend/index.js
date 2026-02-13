@@ -33,7 +33,7 @@ app.get("/", (req, res) => {
 app.post("/api/player", (req, res) => {
   const { firstName, lastName } = req.body;
   if (!firstName || !lastName) {
-    return res.status(400).json({ error: "Nom et prenom requis" });
+    return res.status(400).json({ error: "Nom et prénom requis" });
   }
 
   const now = new Date().toISOString();
@@ -133,37 +133,37 @@ app.get("/api/room/players/:code", (req, res) => {
 
 const QUESTIONS = [
   {
-    questionText: "A quoi sert ce logiciel (VScode) ?",
+    questionText: "À quoi sert ce logiciel (VS Code) ?",
     imageUrl: "/questions/vscode.png",
-    answers: ["Oriente HTML", "Heberger", "Maintenance", "Developper"],
+    answers: ["Orienté HTML", "Héberger", "Maintenance", "Développer"],
     correctIndex: 3,
   },
   {
-    questionText: "A quoi correspond ce logo ?",
+    questionText: "À quoi correspond ce logo ?",
     imageUrl: "/questions/logohtml.png",
     answers: ["Yell5", "HTML", "JetBrains", "SQL"],
     correctIndex: 1,
   },
   {
-    questionText: "A quoi correspond ce logo ?",
+    questionText: "À quoi correspond ce logo ?",
     imageUrl: "/questions/logocss.png",
     answers: ["CSS", "Node.js", "TScript", "BlueStack"],
     correctIndex: 0,
   },
   {
-    questionText: "A quoi correspond ce logo ?",
+    questionText: "À quoi correspond ce logo ?",
     imageUrl: "/questions/logojs.png",
     answers: ["JSite", "Ruby", "JavaScript", "PHP"],
     correctIndex: 2,
   },
   {
-    questionText: "A quoi correspond ce logo ?",
+    questionText: "À quoi correspond ce logo ?",
     imageUrl: "/questions/logopy.png",
     answers: ["Reverze", "Vercel", "Snake", "Python"],
     correctIndex: 3,
   },
   {
-    questionText: "Ou dois-je ecrire mon code ?",
+    questionText: "Où dois-je écrire mon code ?",
     imageUrl: "/questions/code.png",
     answers: ["Title", "html", "Body", "Head"],
     correctIndex: 2,
@@ -172,7 +172,7 @@ const QUESTIONS = [
 
 const GAME4_QUESTIONS = [
   {
-    questionText: "A quoi servait Internet au depart ?",
+    questionText: "À quoi servait Internet au départ ?",
     answers: [
       "A jouer en ligne",
       "A regarder des films",
@@ -192,7 +192,7 @@ const GAME4_QUESTIONS = [
     correctIndex: 0,
   },
   {
-    questionText: "Comment s'appelait le premier reseau a l'origine d'Internet ?",
+    questionText: "Comment s'appelait le premier réseau à l'origine d'Internet ?",
     answers: ["INTRANET", "WIFI-NET", "WEBNET", "ARPANET"],
     correctIndex: 3,
   },
@@ -202,17 +202,17 @@ const GAME4_QUESTIONS = [
       "Par email",
       "Par courrier et telephone",
       "Par SMS",
-      "Par reseaux sociaux",
+      "Par réseaux sociaux",
     ],
     correctIndex: 1,
   },
   {
     questionText: "Quel objet est devenu indispensable pour aller sur Internet ?",
-    answers: ["Le smartphone", "La television", "La radio", "Le CD"],
+    answers: ["Le smartphone", "La télévision", "La radio", "Le CD"],
     correctIndex: 0,
   },
   {
-    questionText: "Quel est le moteur de recherche le plus utilise ?",
+    questionText: "Quel est le moteur de recherche le plus utilisé ?",
     answers: ["Google", "Yahoo", "Bing", "Safari"],
     correctIndex: 0,
   },
@@ -474,7 +474,7 @@ function isRoomOwner(roomCode, playerId) {
 
 function emitOwnerOnlyError(socket) {
   socket.emit("ownerActionDenied", {
-    message: "Seul le proprietaire de la partie peut lancer cette etape.",
+    message: "Seul le propriétaire de la partie peut lancer cette étape.",
   });
 }
 
@@ -923,7 +923,7 @@ io.on("connection", (socket) => {
     if (state.game3.completed) {
       return socket.emit("game3Progress", {
         success: false,
-        error: "Jeu 3 deja termine",
+        error: "Jeu 3 déjà terminé",
       });
     }
 
@@ -938,7 +938,7 @@ io.on("connection", (socket) => {
     if (!currentRiddle) {
       return socket.emit("game3Progress", {
         success: false,
-        error: "Enigme introuvable",
+        error: "Énigme introuvable",
       });
     }
 
@@ -950,7 +950,7 @@ io.on("connection", (socket) => {
         completed: false,
         currentIndex: state.game3.currentIndex,
         total: state.game3.total,
-        message: "Mauvais mot, reessayez.",
+        message: "Mauvais mot, réessayez.",
         activePlayerId: state.game3.activePlayerId,
         activePlayerName: state.game3.activePlayerName,
       });
@@ -973,7 +973,7 @@ io.on("connection", (socket) => {
         completed: true,
         currentIndex: state.game3.currentIndex,
         total: state.game3.total,
-        message: "Bravo, les 10 enigmes sont validees.",
+        message: "Bravo, les 10 énigmes sont validées.",
         activePlayerId: state.game3.activePlayerId,
         activePlayerName: state.game3.activePlayerName,
       });
@@ -1000,7 +1000,7 @@ io.on("connection", (socket) => {
       completed: false,
       currentIndex: state.game3.currentIndex,
       total: state.game3.total,
-      message: "Bonne reponse. Enigme suivante.",
+      message: "Bonne réponse. Énigme suivante.",
       activePlayerId: state.game3.activePlayerId,
       activePlayerName: state.game3.activePlayerName,
     });

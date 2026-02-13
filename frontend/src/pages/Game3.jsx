@@ -86,7 +86,7 @@ export default function Game3() {
 
     socket.on("game3Complete", () => {
       setCompleted(true);
-      setFeedback("Jeu 3 termine. Bravo.");
+      setFeedback("Jeu 3 terminé. Bravo.");
     });
 
     socket.on("game4Available", () => {
@@ -100,7 +100,7 @@ export default function Game3() {
 
     socket.on("ownerActionDenied", (payload) => {
       setOwnerOnlyMessage(
-        payload?.message || "Seul le proprietaire de la partie peut lancer."
+        payload?.message || "Seul le propriétaire de la partie peut lancer."
       );
     });
 
@@ -143,7 +143,7 @@ export default function Game3() {
 
     if (!isOwner) {
       setOwnerOnlyMessage(
-        "Seul le proprietaire de la partie peut lancer l'epreuve."
+        "Seul le propriétaire de la partie peut lancer l'épreuve."
       );
       return;
     }
@@ -160,7 +160,7 @@ export default function Game3() {
       <div className="min-h-screen bg-gradient-to-br from-indigo-700 to-cyan-800 text-white flex items-center justify-center p-4">
         <div className="max-w-xl w-full rounded-2xl bg-white/10 p-8 text-center">
           <h1 className="text-3xl font-bold">Jeu 3</h1>
-          <p className="mt-4 opacity-90">Le Jeu 3 sera disponible apres le Jeu 2.</p>
+          <p className="mt-4 opacity-90">Le Jeu 3 sera disponible après le Jeu 2.</p>
           <motion.button
             whileTap={{ scale: 0.96 }}
             whileHover={{ scale: 1.03 }}
@@ -183,7 +183,7 @@ export default function Game3() {
           className="max-w-3xl w-full rounded-3xl bg-white/10 border border-white/20 backdrop-blur-md p-7 md:p-10"
         >
           <p className="uppercase text-xs tracking-[0.25em] opacity-80">Épreuve 3</p>
-          <h1 className="text-3xl md:text-4xl font-black mt-2">Enigmes à relais</h1>
+          <h1 className="text-3xl md:text-4xl font-black mt-2">Énigmes à relais</h1>
           <p className="mt-4 text-white/90 leading-relaxed">
             Vous recevez 10 énigmes dans la salle (hors site). À chaque étape, un seul joueur actif
             peut saisir la réponse. Puis le tour passe au suivant.
@@ -213,13 +213,13 @@ export default function Game3() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_0%_0%,#06b6d4_0%,#1e3a8a_45%,#312e81_100%)] text-white flex items-center justify-center p-4">
       <div className="max-w-4xl w-full rounded-3xl bg-white/10 p-6 md:p-8 shadow-2xl backdrop-blur-md border border-white/20">
         <div className="flex items-center justify-between mb-5">
-          <h1 className="text-2xl md:text-3xl font-black">Jeu 3: Enigmes</h1>
+          <h1 className="text-2xl md:text-3xl font-black">Jeu 3: Énigmes</h1>
           <span className="text-sm opacity-80">Salon {code}</span>
         </div>
 
         <div className="rounded-xl bg-white/10 p-4 mb-4 border border-white/20">
           <div className="flex items-center justify-between">
-            <p className="text-lg font-semibold">Enigme {Math.min(currentIndex + 1, total)} / {total}</p>
+            <p className="text-lg font-semibold">Énigme {Math.min(currentIndex + 1, total)} / {total}</p>
             <p className="text-sm opacity-80">{progressPercent}% complété</p>
           </div>
           <div className="mt-3 h-2 bg-white/20 rounded-full overflow-hidden">

@@ -118,7 +118,7 @@ export default function Game() {
 
     socket.on("ownerActionDenied", (payload) => {
       setOwnerOnlyMessage(
-        payload?.message || "Seul le proprietaire de la partie peut lancer."
+        payload?.message || "Seul le propriétaire de la partie peut lancer."
       );
     });
 
@@ -162,7 +162,7 @@ export default function Game() {
   const launchQuizFromIntro = () => {
     if (!isOwner) {
       setOwnerOnlyMessage(
-        "Seul le proprietaire de la partie peut lancer l'epreuve."
+        "Seul le propriétaire de la partie peut lancer l'épreuve."
       );
       return;
     }
@@ -178,7 +178,7 @@ export default function Game() {
   const continueToGame2 = () => {
     if (!isOwner) {
       setOwnerOnlyMessage(
-        "Seul le proprietaire de la partie peut lancer l'epreuve suivante."
+        "Seul le propriétaire de la partie peut lancer l'épreuve suivante."
       );
       return;
     }
@@ -200,13 +200,13 @@ export default function Game() {
           <h1 className="text-3xl font-bold mb-4">Fin du Quiz</h1>
 
           <p className="text-xl opacity-90 mb-2">
-            Score de l&apos;equipe : <b>{score}/6</b>
+            Score de l&apos;équipe : <b>{score}/6</b>
           </p>
 
           <p className="text-xl opacity-90 mb-6">
             {success
               ? "Quiz valide. Le Jeu 2 est disponible."
-              : "Quiz termine. Passez au Jeu 2."}
+              : "Quiz terminé. Passez au Jeu 2."}
           </p>
 
           {ownerOnlyMessage && (
@@ -223,7 +223,7 @@ export default function Game() {
               Continuer vers Jeu 2
             </motion.button>
           ) : (
-            <p className="text-sm opacity-80">Deblocage du Jeu 2 en cours...</p>
+            <p className="text-sm opacity-80">Déblocage du Jeu 2 en cours...</p>
           )}
         </motion.div>
       </div>
@@ -238,7 +238,7 @@ export default function Game() {
           animate={{ opacity: 1 }}
           className="text-center text-xl opacity-90"
         >
-          Preparation de la question...
+          Préparation de la question...
         </motion.div>
       </div>
     );
@@ -324,7 +324,7 @@ export default function Game() {
 
         {phase === QUESTION_PHASES.THINK && (
           <p className="text-center text-lg opacity-80">
-            Reflechis... les reponses arrivent bientot.
+            Réfléchis... les réponses arrivent bientôt.
           </p>
         )}
 
@@ -335,7 +335,7 @@ export default function Game() {
         )}
 
         {phase === QUESTION_PHASES.RESULT && (
-          <p className="text-center text-lg opacity-80 mb-4">Resultat...</p>
+          <p className="text-center text-lg opacity-80 mb-4">Résultat...</p>
         )}
 
         {question && (

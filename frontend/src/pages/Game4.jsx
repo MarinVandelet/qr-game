@@ -116,7 +116,7 @@ export default function Game4() {
 
     socket.on("ownerActionDenied", (payload) => {
       setOwnerOnlyMessage(
-        payload?.message || "Seul le proprietaire de la partie peut lancer."
+        payload?.message || "Seul le propriétaire de la partie peut lancer."
       );
     });
 
@@ -184,7 +184,7 @@ export default function Game4() {
 
     if (!isOwner) {
       setOwnerOnlyMessage(
-        "Seul le proprietaire de la partie peut lancer l'epreuve."
+        "Seul le propriétaire de la partie peut lancer l'épreuve."
       );
       return;
     }
