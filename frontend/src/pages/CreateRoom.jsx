@@ -28,8 +28,8 @@ export default function CreateRoom() {
         <div className="badge mb-4">
           <FiHash /> Salon
         </div>
-        <h1 className="text-3xl font-extrabold">Cr&eacute;er un salon</h1>
-        <p className="soft-text mt-2">G&eacute;n&eacute;rez un code et partagez-le avec votre &eacute;quipe.</p>
+        <h1 className="text-3xl font-extrabold">{"Cr\u00e9er un salon"}</h1>
+        <p className="soft-text mt-2">{"G\u00e9n\u00e9rez un code et partagez-le avec votre \u00e9quipe."}</p>
 
         {!roomCode && (
           <motion.button

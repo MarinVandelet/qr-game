@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+ï»¿import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { FiCopy, FiPlay, FiUsers } from "react-icons/fi";
@@ -124,7 +124,7 @@ export default function WaitingRoom() {
               {isOwner ? (
                 <>
                   <p className="mb-3 text-sm soft-text">
-                    Tu es chef du salon. Lance la partie quand tout le monde est prêt.
+                    {"Tu es chef du salon. Lance la partie quand tout le monde est pr\u00eat."}
                   </p>
                   <motion.button
                     whileTap={{ scale: 0.98 }}

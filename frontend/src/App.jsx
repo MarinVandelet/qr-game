@@ -41,12 +41,12 @@ export default function App() {
             <FiUser /> Joueur
           </div>
           <h1 className="text-3xl font-extrabold">Bienvenue</h1>
-          <p className="soft-text mt-2">Saisissez votre identit&eacute; pour rejoindre l&apos;aventure QR Game.</p>
+          <p className="soft-text mt-2">{"Saisissez votre identit\u00e9 pour rejoindre l\u2019aventure QR Game."}</p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-3">
             <input
               type="text"
-              placeholder="Pr&eacute;nom"
+              placeholder={"Pr\u00e9nom"}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               className="field"
@@ -94,7 +94,7 @@ export default function App() {
             />
           </div>
 
-          <p className="soft-text text-center mb-6">Cr&eacute;ez un salon ou rejoignez un code existant.</p>
+          <p className="soft-text text-center mb-6">{"Cr\u00e9ez un salon ou rejoignez un code existant."}</p>
 
           <div className="space-y-3">
             <motion.button
@@ -103,7 +103,7 @@ export default function App() {
               onClick={() => navigate("/create-room")}
               className="primary-btn w-full inline-flex items-center justify-center gap-2"
             >
-              <FiPlusCircle /> Cr&eacute;er un salon
+              <FiPlusCircle /> {"Cr\u00e9er un salon"}
             </motion.button>
 
             <motion.button

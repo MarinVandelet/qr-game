@@ -1,4 +1,4 @@
-import { useState } from "react";
+ï»¿import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -31,7 +31,9 @@ export default function JoinRoom() {
         className="glass-card max-w-md p-7"
       >
         <h1 className="text-3xl font-extrabold">Rejoindre un salon</h1>
-        <p className="soft-text mt-2">Entrez le code reçu pour rejoindre l&apos;équipe.</p>
+        <p className="soft-text mt-2">
+          {"Entrez le code re\u00e7u pour rejoindre l\u2019\u00e9quipe."}
+        </p>
 
         <input
           type="text"
