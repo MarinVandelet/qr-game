@@ -651,9 +651,15 @@ io.on("connection", (socket) => {
 
   socket.on("joinRoom", (roomCode) => {
     if (!roomCode) return;
+    const nextRoom = String(roomCode);
 
-    socket.join(roomCode);
-    emitSessionStateToSocket(socket, roomCode);
+    if (socket.data?.activeRoom && socket.data.activeRoom !== nextRoom) {
+      socket.leave(socket.data.activeRoom);
+    }
+
+    socket.join(nextRoom);
+    socket.data.activeRoom = nextRoom;
+    emitSessionStateToSocket(socket, nextRoom);
   });
 
   socket.on("startGame", (roomCode) => {
