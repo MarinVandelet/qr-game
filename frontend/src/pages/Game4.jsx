@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { socket } from "../socket";
@@ -188,7 +188,7 @@ export default function Game4() {
       <div className="min-h-screen bg-gradient-to-br from-slate-700 to-cyan-700 text-white flex items-center justify-center p-4">
         <div className="max-w-xl w-full rounded-2xl bg-white/10 p-8 text-center">
           <h1 className="text-3xl font-bold">Jeu 4</h1>
-          <p className="mt-4 opacity-90">Le Jeu 4 sera disponible apres le Jeu 3.</p>
+          <p className="mt-4 opacity-90">Le Jeu 4 sera disponible après le Jeu 3.</p>
           <motion.button
             whileTap={{ scale: 0.96 }}
             whileHover={{ scale: 1.03 }}
@@ -206,7 +206,7 @@ export default function Game4() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-700 to-cyan-700 text-white flex items-center justify-center p-4">
         <div className="max-w-xl w-full rounded-2xl bg-white/10 p-8 text-center">
-          <h1 className="text-3xl font-bold">Jeu 4 - Quiz Final</h1>
+          <h1 className="text-3xl font-bold">Jeu 4 - Quiz final</h1>
           <p className="mt-4 opacity-90">6 questions, sans images.</p>
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -226,7 +226,7 @@ export default function Game4() {
       <div className="min-h-screen bg-gradient-to-br from-slate-700 to-cyan-700 text-white flex items-center justify-center p-4">
         <div className="max-w-xl w-full rounded-2xl bg-white/10 p-8 text-center">
           <h1 className="text-3xl font-bold">Fin du Jeu 4</h1>
-          <p className="mt-4 text-xl">Score equipe: {score}/{total}</p>
+          <p className="mt-4 text-xl">Score équipe: {score}/{total}</p>
         </div>
       </div>
     );
@@ -260,7 +260,7 @@ export default function Game4() {
         )}
 
         {phase === PHASES.THINK && (
-          <p className="text-center text-lg opacity-85">Reflechissez...</p>
+          <p className="text-center text-lg opacity-85">Réfléchissez...</p>
         )}
         {phase === PHASES.ANSWER && (
           <p className="text-center text-lg opacity-85 mb-4">
@@ -268,7 +268,7 @@ export default function Game4() {
           </p>
         )}
         {phase === PHASES.RESULT && (
-          <p className="text-center text-lg opacity-85 mb-4">Resultat...</p>
+          <p className="text-center text-lg opacity-85 mb-4">Résultat...</p>
         )}
 
         {question && (

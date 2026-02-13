@@ -1,4 +1,15 @@
-/* Reset simple pour que l'app prenne tout l'écran */
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
+
+:root {
+  --bg-0: #2f63f1;
+  --bg-1: #5865f2;
+  --bg-2: #9660f6;
+  --glass: rgba(67, 86, 187, 0.28);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --text-main: #f8fbff;
+  --text-soft: rgba(248, 251, 255, 0.86);
+  --card-shadow: 0 20px 42px rgba(23, 34, 92, 0.28);
+}
 
 * {
   box-sizing: border-box;
@@ -12,9 +23,81 @@ body,
   height: 100%;
 }
 
-/* optionnel : fond neutre derrière ton gradient */
 body {
-  background-color: #000;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(188, 202, 255, 0.24), transparent 32%),
+    linear-gradient(130deg, var(--bg-0), var(--bg-1) 52%, var(--bg-2));
+  color: var(--text-main);
+  font-family: "Sora", system-ui, -apple-system, sans-serif;
+}
+
+h1,
+h2,
+h3,
+button {
+  font-family: "Space Grotesk", "Sora", sans-serif;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.glass-card {
+  width: 100%;
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  box-shadow: var(--card-shadow);
+}
+
+.primary-btn {
+  border: 0;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1d3fa8;
+  font-weight: 700;
+  padding: 12px 16px;
+}
+
+.secondary-btn {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1d3fa8;
+  font-weight: 700;
+  padding: 12px 16px;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f2668;
+  padding: 12px 14px;
+  outline: none;
+}
+
+.field::placeholder {
+  color: #4a5d8f;
+}
+
+.soft-text {
+  color: var(--text-soft);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 12px;
 }

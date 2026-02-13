@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import logo from "./assets/logo.png";
 import { Routes, Route, useNavigate } from "react-router-dom";
+import { FiArrowRight, FiLogIn, FiPlusCircle, FiUser } from "react-icons/fi";
 import { API_URL } from "./config";
 
 import CreateRoom from "./pages/CreateRoom";
@@ -18,61 +19,54 @@ export default function App() {
   const navigate = useNavigate();
   const playerId = localStorage.getItem("playerId");
 
-  // --------------------------------------------------------------------
-  // PAGE FORMULAIRE
-  // --------------------------------------------------------------------
   function FormPage() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
 
     const handleSubmit = async (e) => {
       e.preventDefault();
-
-      const res = await axios.post(`${API_URL}/api/player`, {
-        firstName,
-        lastName,
-      });
-
+      const res = await axios.post(`${API_URL}/api/player`, { firstName, lastName });
       localStorage.setItem("playerId", res.data.id);
       navigate("/menu");
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center p-4">
-
+      <div className="app-shell">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card max-w-md p-7 md:p-8"
         >
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-gray-800">
-            Entrez vos informations
-          </h1>
+          <div className="badge mb-4">
+            <FiUser /> Joueur
+          </div>
+          <h1 className="text-3xl font-extrabold">Bienvenue</h1>
+          <p className="soft-text mt-2">Saisissez votre identit&eacute; pour rejoindre l&apos;aventure QR Game.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-3">
             <input
               type="text"
-              placeholder="Prénom"
+              placeholder="Pr&eacute;nom"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-gray-100 outline-none"
+              className="field"
+              required
             />
-
             <input
               type="text"
               placeholder="Nom"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-gray-100 outline-none"
+              className="field"
+              required
             />
-
             <motion.button
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.02 }}
               type="submit"
-              className="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold shadow-md"
+              className="primary-btn w-full inline-flex items-center justify-center gap-2"
             >
-              Continuer
+              Continuer <FiArrowRight />
             </motion.button>
           </form>
         </motion.div>
@@ -80,45 +74,45 @@ export default function App() {
     );
   }
 
-  // --------------------------------------------------------------------
-  // PAGE MENU
-  // --------------------------------------------------------------------
   function MenuPage() {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-500 flex items-center justify-center p-4">
-
+      <div className="app-shell">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md text-white flex flex-col items-center"
+          className="glass-card max-w-lg p-6 md:p-8 text-white"
         >
-          <motion.img
-            src={logo}
-            alt="Logo"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="w-64 md:w-96 mb-10 drop-shadow-xl"
-            draggable="false"
-          />
+          <div className="flex justify-center mb-5">
+            <motion.img
+              src={logo}
+              alt="QR Game"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="w-44 md:w-56 drop-shadow-xl"
+              draggable="false"
+            />
+          </div>
 
-          <div className="w-full space-y-4">
+          <p className="soft-text text-center mb-6">Cr&eacute;ez un salon ou rejoignez un code existant.</p>
+
+          <div className="space-y-3">
             <motion.button
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.02 }}
               onClick={() => navigate("/create-room")}
-              className="w-full bg-white text-blue-800 py-3 rounded-xl font-semibold shadow-lg"
+              className="primary-btn w-full inline-flex items-center justify-center gap-2"
             >
-              Créer un salon
+              <FiPlusCircle /> Cr&eacute;er un salon
             </motion.button>
 
             <motion.button
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.02 }}
               onClick={() => navigate("/join-room")}
-              className="w-full bg-white text-blue-800 py-3 rounded-xl font-semibold shadow-lg"
+              className="secondary-btn w-full inline-flex items-center justify-center gap-2"
             >
-              Rejoindre un salon
+              <FiLogIn /> Rejoindre un salon
             </motion.button>
           </div>
         </motion.div>
@@ -126,9 +120,6 @@ export default function App() {
     );
   }
 
-  // --------------------------------------------------------------------
-  // ROUTES
-  // --------------------------------------------------------------------
   return (
     <Routes>
       <Route path="/" element={playerId ? <MenuPage /> : <FormPage />} />
