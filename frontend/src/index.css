@@ -20,13 +20,25 @@ body,
 #root {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100%;
+}
+
+html {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(188, 202, 255, 0.24), transparent 32%),
+    linear-gradient(130deg, var(--bg-0), var(--bg-1) 52%, var(--bg-2));
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: var(--bg-1);
 }
 
 body {
   background:
     radial-gradient(circle at 50% 50%, rgba(188, 202, 255, 0.24), transparent 32%),
     linear-gradient(130deg, var(--bg-0), var(--bg-1) 52%, var(--bg-2));
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: var(--bg-1);
   color: var(--text-main);
   font-family: "Sora", system-ui, -apple-system, sans-serif;
 }
@@ -39,7 +51,7 @@ button {
 }
 
 .app-shell {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
