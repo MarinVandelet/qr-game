@@ -202,70 +202,74 @@ export default function Game2() {
     return "PUZZLE";
   }, [unlocked, introAccepted, wordsSolved]);
 
-  const submitWords = () => {
-    if (isDevPreview) {
-      const seenWords = new Set();
-      const seenPairs = new Set();
-      const entries = words.map((input) => {
-        const normalized = normalizeWord(input);
-        if (!normalized) {
-          return {
-            input,
-            normalized,
-            status: "empty",
-          };
-        }
-        if (seenWords.has(normalized)) {
-          return {
-            input,
-            normalized,
-            status: "duplicate",
-          };
-        }
-        seenWords.add(normalized);
-        const pairId = devAcceptedToPair.get(normalized);
-        if (!pairId) {
-          return {
-            input,
-            normalized,
-            status: "invalid",
-          };
-        }
-        if (seenPairs.has(pairId)) {
-          return {
-            input,
-            normalized,
-            status: "duplicate",
-          };
-        }
-        seenPairs.add(pairId);
+  const runDevWordValidation = (candidateWords) => {
+    const seenWords = new Set();
+    const seenPairs = new Set();
+    const entries = candidateWords.map((input) => {
+      const normalized = normalizeWord(input);
+      if (!normalized) {
         return {
           input,
           normalized,
-          status: "valid",
-          pairId,
+          status: "empty",
         };
-      });
+      }
+      if (seenWords.has(normalized)) {
+        return {
+          input,
+          normalized,
+          status: "duplicate",
+        };
+      }
+      seenWords.add(normalized);
+      const pairId = devAcceptedToPair.get(normalized);
+      if (!pairId) {
+        return {
+          input,
+          normalized,
+          status: "invalid",
+        };
+      }
+      if (seenPairs.has(pairId)) {
+        return {
+          input,
+          normalized,
+          status: "duplicate",
+        };
+      }
+      seenPairs.add(pairId);
+      return {
+        input,
+        normalized,
+        status: "valid",
+        pairId,
+      };
+    });
 
-      const validated = entries
-        .filter((entry) => entry.status === "valid")
-        .map((entry) => entry.normalized);
-      const success = seenPairs.size === devPairs.length;
-      const missingLeftLabels = devPairs
-        .filter((pair) => !seenPairs.has(pair.id))
-        .map((pair) => pair.leftLabel);
+    const validated = entries
+      .filter((entry) => entry.status === "valid")
+      .map((entry) => entry.normalized);
+    const success = seenPairs.size === devPairs.length;
+    const missingLeftLabels = devPairs
+      .filter((pair) => !seenPairs.has(pair.id))
+      .map((pair) => pair.leftLabel);
 
-      setValidatedWords(validated);
-      setWordsResult({
-        success,
-        entries,
-        validatedCount: seenPairs.size,
-        missingLeftLabels,
-        validatedWords: validated,
-      });
-      setWordValidationEntries(entries);
-      if (success) setWordsSolved(true);
-      setIntroAccepted(true);
+    setValidatedWords(validated);
+    setWordsResult({
+      success,
+      entries,
+      validatedCount: seenPairs.size,
+      missingLeftLabels,
+      validatedWords: validated,
+    });
+    setWordValidationEntries(entries);
+    if (success) setWordsSolved(true);
+    setIntroAccepted(true);
+  };
+
+  const submitWords = () => {
+    if (isDevPreview) {
+      runDevWordValidation(words);
       return;
     }
 
@@ -280,6 +284,17 @@ export default function Game2() {
     const nextWords = [...words];
     nextWords[idx] = value;
     setWords(nextWords);
+
+    if (isDevPreview) {
+      runDevWordValidation(nextWords);
+      return;
+    }
+
+    socket.emit("game2LiveWordUpdate", {
+      roomCode: code,
+      index: idx,
+      value,
+    });
   };
 
   const onChangeAssignment = (leftId, rightId) => {

@@ -174,22 +174,22 @@ const GAME4_QUESTIONS = [
   {
     questionText: "À quoi servait Internet au départ ?",
     answers: [
-      "A jouer en ligne",
-      "A regarder des films",
-      "A echanger des informations entre chercheurs",
-      "A faire des achats",
+      "À jouer en ligne",
+      "À regarder des films",
+      "À échanger des informations entre chercheurs",
+      "À faire des achats",
     ],
     correctIndex: 2,
   },
   {
-    questionText: "Qui etaient les premiers utilisateurs d'Internet ?",
+    questionText: "Qui est considérée comme la première programmeuse de l'histoire",
     answers: [
-      "Les chercheurs et universitaires",
-      "Les adolescents",
-      "Les entreprises",
-      "Les gamers",
+      "Marie Curie",
+      "Ada Lovelace",
+      "Olympe de Gouge",
+      "Rosalind Franklin",
     ],
-    correctIndex: 0,
+    correctIndex: 1,
   },
   {
     questionText: "Comment s'appelait le premier réseau à l'origine d'Internet ?",
@@ -197,19 +197,19 @@ const GAME4_QUESTIONS = [
     correctIndex: 3,
   },
   {
-    questionText: "Avant Internet, comment communiquait-on surtout a distance ?",
+    questionText: "Qui est considéré comme le père de l'informatique moderne ?",
     answers: [
-      "Par email",
-      "Par courrier et telephone",
-      "Par SMS",
-      "Par réseaux sociaux",
+      "Alan Turing",
+      "Bill Gates",
+      "Elon Musk",
+      "Steve Jobs",
     ],
-    correctIndex: 1,
+    correctIndex: 0,
   },
   {
-    questionText: "Quel objet est devenu indispensable pour aller sur Internet ?",
-    answers: ["Le smartphone", "La télévision", "La radio", "Le CD"],
-    correctIndex: 0,
+    questionText: "Quel mouvement des années 1960 à influencé l'esprit libre et collaboratif d'internet ",
+    answers: ["Le mouvement punk ", "Le mouvement gothique", "Le mouvement hippies", "Le mouvement disco"],
+    correctIndex: 2,
   },
   {
     questionText: "Quel est le moteur de recherche le plus utilisé ?",
@@ -742,6 +742,47 @@ io.on("connection", (socket) => {
     }
 
     const validation = buildWordValidation(words);
+
+    state.game2.wordEntries = validation.entries.map((entry) => entry.input);
+    state.game2.wordValidationEntries = validation.entries;
+    state.game2.entryOpened = true;
+    state.game2.introAccepted = true;
+    state.game2.validatedWords = validation.entries
+      .filter((entry) => entry.status === "valid")
+      .map((entry) => entry.normalized);
+    state.game2.wordsSolved = validation.success;
+
+    io.to(roomCode).emit("game2WordsResult", {
+      success: validation.success,
+      entries: validation.entries,
+      validatedCount: validation.uniqueMatchedPairIds.length,
+      missingLeftLabels: validation.missingLeftLabels,
+      canStartPuzzle: validation.success,
+      validatedWords: state.game2.validatedWords,
+    });
+
+    emitSessionStateToRoom(roomCode);
+  });
+
+  socket.on("game2LiveWordUpdate", ({ roomCode, index, value }) => {
+    const state = ROOM_STATES[roomCode];
+    if (!state || !state.game2.unlocked) return;
+    if (state.game2.wordsSolved) return;
+
+    const idx = Number(index);
+    if (!Number.isInteger(idx) || idx < 0 || idx > 5) return;
+
+    const currentEntries = Array.isArray(state.game2.wordEntries)
+      ? [...state.game2.wordEntries]
+      : ["", "", "", "", "", ""];
+
+    while (currentEntries.length < 6) currentEntries.push("");
+
+    if (state.game2.wordValidationEntries?.[idx]?.status === "valid") return;
+
+    currentEntries[idx] = String(value || "");
+
+    const validation = buildWordValidation(currentEntries);
 
     state.game2.wordEntries = validation.entries.map((entry) => entry.input);
     state.game2.wordValidationEntries = validation.entries;

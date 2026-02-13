@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { socket } from "../socket";
@@ -13,11 +13,55 @@ const PHASES = {
 
 const DEV_GAME4_QUESTIONS = [
   {
-    questionText: "Mode test: aperçu du quiz 4",
-    answers: ["Réponse A", "Réponse B", "Réponse C", "Réponse D"],
+    questionText: "A quoi servait Internet au depart ?",
+    answers: [
+      "A jouer en ligne",
+      "A regarder des films",
+      "A echanger des informations entre chercheurs",
+      "A faire des achats",
+    ],
     correctIndex: 2,
   },
+  {
+    questionText: "Qui etaient les premiers utilisateurs d'Internet ?",
+    answers: [
+      "Les chercheurs et universitaires",
+      "Les adolescents",
+      "Les entreprises",
+      "Les gamers",
+    ],
+    correctIndex: 0,
+  },
+  {
+    questionText: "Comment s'appelait le premier reseau a l'origine d'Internet ?",
+    answers: ["INTRANET", "WIFI-NET", "WEBNET", "ARPANET"],
+    correctIndex: 3,
+  },
+  {
+    questionText: "Avant Internet, comment communiquait-on surtout a distance ?",
+    answers: [
+      "Par email",
+      "Par courrier et telephone",
+      "Par SMS",
+      "Par reseaux sociaux",
+    ],
+    correctIndex: 1,
+  },
+  {
+    questionText: "Quel objet est devenu indispensable pour aller sur Internet ?",
+    answers: ["Le smartphone", "La television", "La radio", "Le CD"],
+    correctIndex: 0,
+  },
+  {
+    questionText: "Quel est le moteur de recherche le plus utilise ?",
+    answers: ["Google", "Yahoo", "Bing", "Safari"],
+    correctIndex: 0,
+  },
 ];
+
+function waitMs(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export default function Game4() {
   const { code } = useParams();
@@ -48,6 +92,12 @@ export default function Game4() {
   const [startTime, setStartTime] = useState(null);
   const [duration, setDuration] = useState(1);
   const [, setTick] = useState(0);
+  const chosenIndexRef = useRef(null);
+  const devRunIdRef = useRef(0);
+
+  useEffect(() => {
+    chosenIndexRef.current = chosenIndex;
+  }, [chosenIndex]);
 
   useEffect(() => {
     const interval = setInterval(() => setTick((v) => v + 1), 100);
@@ -61,18 +111,17 @@ export default function Game4() {
   useEffect(() => {
     if (!isDevPreview) return;
     setUnlocked(true);
-    setStarted(true);
-    setQuestionIndex(0);
-    setQuestion({
-      questionText: DEV_GAME4_QUESTIONS[0].questionText,
-      answers: DEV_GAME4_QUESTIONS[0].answers,
-    });
-    setPhase(PHASES.ANSWER);
-    setActivePlayerId(playerId || 1);
-    setActivePlayerName("Vous");
-    setDuration(1);
-    setStartTime(Date.now());
-  }, [isDevPreview, playerId]);
+    setStarted(false);
+    setEnded(false);
+    setPhase(PHASES.LOADING);
+    setTotal(DEV_GAME4_QUESTIONS.length);
+  }, [isDevPreview]);
+
+  useEffect(() => {
+    return () => {
+      devRunIdRef.current += 1;
+    };
+  }, []);
 
   useEffect(() => {
     socket.on("sessionState", (session) => {
@@ -80,30 +129,33 @@ export default function Game4() {
       setOwnerId(session.ownerId || null);
       const game4 = session.game4 || {};
 
-      setUnlocked(Boolean(game4.unlocked));
-      setStarted(Boolean(game4.started));
-      setEnded(Boolean(game4.ended));
+      setUnlocked(Boolean(game4.unlocked) || isDevPreview);
+      if (!isDevPreview) {
+        setStarted(Boolean(game4.started));
+        setEnded(Boolean(game4.ended));
 
-      if (typeof game4.questionIndex === "number") {
-        setQuestionIndex(game4.questionIndex);
-      }
-      if (game4.currentQuestion) {
-        setQuestion(game4.currentQuestion);
-      }
-      if (game4.phase) {
-        setPhase(game4.phase);
+        if (typeof game4.questionIndex === "number") {
+          setQuestionIndex(game4.questionIndex);
+        }
+        if (game4.currentQuestion) {
+          setQuestion(game4.currentQuestion);
+        }
+        if (game4.phase) {
+          setPhase(game4.phase);
+        }
+
+        setActivePlayerId(game4.activePlayerId || null);
+        setActivePlayerName(game4.activePlayerName || "");
+        setChosenIndex(
+          typeof game4.chosenIndex === "number" ? game4.chosenIndex : null
+        );
+        setCorrectIndex(
+          typeof game4.correctIndex === "number" ? game4.correctIndex : null
+        );
+        setScore(Number(game4.score || 0));
       }
 
-      setActivePlayerId(game4.activePlayerId || null);
-      setActivePlayerName(game4.activePlayerName || "");
-      setChosenIndex(
-        typeof game4.chosenIndex === "number" ? game4.chosenIndex : null
-      );
-      setCorrectIndex(
-        typeof game4.correctIndex === "number" ? game4.correctIndex : null
-      );
-      setScore(Number(game4.score || 0));
-      if (session?.finalResults) {
+      if (session?.finalResults && !isDevPreview) {
         setFinalResults(session.finalResults);
         if (game4.ended) {
           navigate(`/final/${code}`, { state: { finalResults: session.finalResults } });
@@ -116,17 +168,19 @@ export default function Game4() {
 
     socket.on("ownerActionDenied", (payload) => {
       setOwnerOnlyMessage(
-        payload?.message || "Seul le propriétaire de la partie peut lancer."
+        payload?.message || "Seul le proprietaire de la partie peut lancer."
       );
     });
 
     socket.on("game4QuestionData", (payload) => {
+      if (isDevPreview) return;
       setQuestion(payload);
       setChosenIndex(null);
       setCorrectIndex(null);
     });
 
     socket.on("game4Phase", (payload) => {
+      if (isDevPreview) return;
       setPhase(payload.type);
       if (typeof payload.questionIndex === "number") {
         setQuestionIndex(payload.questionIndex);
@@ -138,6 +192,7 @@ export default function Game4() {
     });
 
     socket.on("game4AnswerResult", (payload) => {
+      if (isDevPreview) return;
       setChosenIndex(
         typeof payload.chosenIndex === "number" ? payload.chosenIndex : null
       );
@@ -147,6 +202,7 @@ export default function Game4() {
     });
 
     socket.on("game4End", (payload) => {
+      if (isDevPreview) return;
       setEnded(true);
       setPhase(PHASES.END);
       setScore(Number(payload.score || 0));
@@ -165,7 +221,7 @@ export default function Game4() {
       socket.off("game4End");
       socket.off("ownerActionDenied");
     };
-  }, [code, navigate]);
+  }, [code, navigate, isDevPreview]);
 
   const computeProgress = () => {
     if (!startTime) return 1;
@@ -176,15 +232,75 @@ export default function Game4() {
 
   const progress = computeProgress();
 
-  const isMyTurn = Number(playerId) === Number(activePlayerId);
+  const isMyTurn = isDevPreview
+    ? phase === PHASES.ANSWER
+    : Number(playerId) === Number(activePlayerId);
   const isOwner = ownerId && Number(ownerId) === Number(playerId);
 
+  const runDevGame4 = async () => {
+    const runId = ++devRunIdRef.current;
+    let localScore = 0;
+
+    for (let i = 0; i < DEV_GAME4_QUESTIONS.length; i += 1) {
+      if (runId !== devRunIdRef.current) return;
+      const q = DEV_GAME4_QUESTIONS[i];
+
+      setQuestionIndex(i);
+      setQuestion({ questionText: q.questionText, answers: q.answers });
+      setChosenIndex(null);
+      setCorrectIndex(null);
+      chosenIndexRef.current = null;
+
+      setPhase(PHASES.LOADING);
+      setDuration(500);
+      setStartTime(Date.now());
+      await waitMs(500);
+
+      if (runId !== devRunIdRef.current) return;
+      setPhase(PHASES.THINK);
+      setDuration(3500);
+      setStartTime(Date.now());
+      await waitMs(3500);
+
+      if (runId !== devRunIdRef.current) return;
+      setPhase(PHASES.ANSWER);
+      setActivePlayerId(playerId || 1);
+      setActivePlayerName("Vous");
+      setDuration(10000);
+      setStartTime(Date.now());
+      await waitMs(10000);
+
+      if (runId !== devRunIdRef.current) return;
+      const selected = chosenIndexRef.current;
+      if (typeof selected === "number" && selected === q.correctIndex) {
+        localScore += 1;
+      }
+      setScore(localScore);
+      setCorrectIndex(q.correctIndex);
+      setPhase(PHASES.RESULT);
+      setDuration(2000);
+      setStartTime(Date.now());
+      await waitMs(2000);
+    }
+
+    if (runId !== devRunIdRef.current) return;
+    setPhase(PHASES.END);
+    setEnded(true);
+  };
+
   const launchGame4 = () => {
-    if (isDevPreview) return;
+    if (isDevPreview) {
+      setStarted(true);
+      setEnded(false);
+      setFinalResults(null);
+      setScore(0);
+      runDevGame4();
+      return;
+    }
 
     if (!isOwner) {
       setOwnerOnlyMessage(
-        "Seul le propriétaire de la partie peut lancer l'épreuve."
+        "Seul le proprietaire de la partie peut lancer l'epreuve."
       );
       return;
     }
@@ -197,6 +313,12 @@ export default function Game4() {
   };
 
   const sendAnswer = (index) => {
+    if (isDevPreview) {
+      if (phase !== PHASES.ANSWER) return;
+      setChosenIndex(index);
+      return;
+    }
+
     if (!isMyTurn || phase !== PHASES.ANSWER) return;
     setChosenIndex(index);
     socket.emit("game4Answer", {
