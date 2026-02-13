@@ -327,6 +327,8 @@ const GAME3_RIDDLES = game3Config.map((item, index) => ({
 function createInitialGame2State() {
   return {
     unlocked: false,
+    entryOpened: false,
+    introAccepted: false,
     startedAt: null,
     completedAt: null,
     wordEntries: [],
@@ -334,6 +336,7 @@ function createInitialGame2State() {
     validatedWords: [],
     wordsSolved: false,
     puzzleAssignments: [],
+    puzzleLocks: {},
     puzzleSolved: false,
     leftItems: GAME2_PAIRS.map((pair) => ({ id: pair.id, label: pair.leftLabel })),
     rightItems: shuffle(
@@ -347,6 +350,7 @@ function createInitialGame3State(players) {
 
   return {
     unlocked: false,
+    introAccepted: false,
     startedAt: null,
     completedAt: null,
     completed: false,
@@ -390,6 +394,7 @@ function getSessionState(roomCode) {
   return {
     roomCode,
     hasSession: true,
+    ownerId: state.ownerId || null,
     quiz: {
       started: true,
       phase: state.phase,
@@ -401,6 +406,8 @@ function getSessionState(roomCode) {
     },
     game2: {
       unlocked: state.game2.unlocked,
+      entryOpened: state.game2.entryOpened,
+      introAccepted: state.game2.introAccepted,
       startedAt: state.game2.startedAt,
       completedAt: state.game2.completedAt,
       wordEntries: state.game2.wordEntries,
@@ -408,12 +415,14 @@ function getSessionState(roomCode) {
       validatedWords: state.game2.validatedWords,
       wordsSolved: state.game2.wordsSolved,
       puzzleAssignments: state.game2.puzzleAssignments,
+      puzzleLocks: state.game2.puzzleLocks,
       puzzleSolved: state.game2.puzzleSolved,
       leftItems: state.game2.leftItems,
       rightItems: state.game2.rightItems,
     },
     game3: {
       unlocked: state.game3.unlocked,
+      introAccepted: state.game3.introAccepted,
       startedAt: state.game3.startedAt,
       completedAt: state.game3.completedAt,
       completed: state.game3.completed,
@@ -449,6 +458,24 @@ function emitSessionStateToRoom(roomCode) {
 
 function emitSessionStateToSocket(socket, roomCode) {
   socket.emit("sessionState", getSessionState(roomCode));
+}
+
+function isRoomOwner(roomCode, playerId) {
+  if (!roomCode || !playerId) return false;
+  const state = ROOM_STATES[roomCode];
+  if (state?.ownerId) {
+    return Number(state.ownerId) === Number(playerId);
+  }
+
+  const room = db.prepare("SELECT ownerId FROM rooms WHERE code = ?").get(roomCode);
+  if (!room) return false;
+  return Number(room.ownerId) === Number(playerId);
+}
+
+function emitOwnerOnlyError(socket) {
+  socket.emit("ownerActionDenied", {
+    message: "Seul le proprietaire de la partie peut lancer cette etape.",
+  });
 }
 
 function buildWordValidation(words) {
@@ -634,14 +661,52 @@ io.on("connection", (socket) => {
     startQuiz(roomCode);
   });
 
-  socket.on("startQuizFromIntro", (roomCode) => {
+  socket.on("startQuizFromIntro", (payload) => {
+    const roomCode =
+      payload && typeof payload === "object" ? payload.roomCode : payload;
+    const playerId =
+      payload && typeof payload === "object" ? payload.playerId : null;
     if (!roomCode) return;
-    startQuizFromIntro(roomCode);
+    startQuizFromIntro(roomCode, playerId, socket);
   });
 
-  socket.on("startGame4", (roomCode) => {
+  socket.on("startGame4", (payload) => {
+    const roomCode =
+      payload && typeof payload === "object" ? payload.roomCode : payload;
+    const playerId =
+      payload && typeof payload === "object" ? payload.playerId : null;
     if (!roomCode) return;
-    startGame4(roomCode);
+    startGame4(roomCode, playerId, socket);
+  });
+
+  socket.on("enterGame2FromQuizEnd", ({ roomCode, playerId }) => {
+    const state = ROOM_STATES[roomCode];
+    if (!state || !state.game2.unlocked) return;
+    if (!isRoomOwner(roomCode, playerId)) return emitOwnerOnlyError(socket);
+
+    state.game2.entryOpened = true;
+    io.to(roomCode).emit("game2EntryOpened", { ok: true });
+    emitSessionStateToRoom(roomCode);
+  });
+
+  socket.on("game2StartFromIntro", ({ roomCode, playerId }) => {
+    const state = ROOM_STATES[roomCode];
+    if (!state || !state.game2.unlocked) return;
+    if (!isRoomOwner(roomCode, playerId)) return emitOwnerOnlyError(socket);
+
+    state.game2.introAccepted = true;
+    io.to(roomCode).emit("game2IntroStarted", { ok: true });
+    emitSessionStateToRoom(roomCode);
+  });
+
+  socket.on("game3StartFromIntro", ({ roomCode, playerId }) => {
+    const state = ROOM_STATES[roomCode];
+    if (!state || !state.game3.unlocked) return;
+    if (!isRoomOwner(roomCode, playerId)) return emitOwnerOnlyError(socket);
+
+    state.game3.introAccepted = true;
+    io.to(roomCode).emit("game3IntroStarted", { ok: true });
+    emitSessionStateToRoom(roomCode);
   });
 
   socket.on("answer", ({ roomCode, chosenIndex }) => {
@@ -674,6 +739,8 @@ io.on("connection", (socket) => {
 
     state.game2.wordEntries = validation.entries.map((entry) => entry.input);
     state.game2.wordValidationEntries = validation.entries;
+    state.game2.entryOpened = true;
+    state.game2.introAccepted = true;
     state.game2.validatedWords = validation.entries
       .filter((entry) => entry.status === "valid")
       .map((entry) => entry.normalized);
@@ -736,7 +803,17 @@ io.on("connection", (socket) => {
         rightId: item.chosenRightId,
       }));
 
-    state.game2.puzzleSolved = success;
+    const nextLocks = { ...(state.game2.puzzleLocks || {}) };
+    for (const item of details) {
+      if (item.isCorrect) {
+        nextLocks[item.leftId] = true;
+      }
+    }
+    state.game2.puzzleLocks = nextLocks;
+
+    state.game2.puzzleSolved =
+      success ||
+      Object.values(state.game2.puzzleLocks).filter(Boolean).length === GAME2_PAIRS.length;
 
     io.to(roomCode).emit("game2PuzzleResult", {
       success,
@@ -745,17 +822,84 @@ io.on("connection", (socket) => {
       total: GAME2_PAIRS.length,
     });
 
-    if (success) {
+    if (state.game2.puzzleSolved) {
       state.game2.completedAt = Date.now();
       io.to(roomCode).emit("game2Complete", {
         success: true,
       });
 
       state.game3.unlocked = true;
+      state.game3.introAccepted = false;
       state.game3.startedAt = Date.now();
       io.to(roomCode).emit("game3Available", {
         unlocked: true,
       });
+    }
+
+    emitSessionStateToRoom(roomCode);
+  });
+
+  socket.on("game2SetPuzzleChoice", ({ roomCode, leftId, rightId }) => {
+    const state = ROOM_STATES[roomCode];
+    if (!state || !state.game2.unlocked) return;
+    if (!state.game2.wordsSolved || state.game2.puzzleSolved) return;
+
+    const validLeftIds = new Set(GAME2_PAIRS.map((pair) => pair.id));
+    if (!validLeftIds.has(String(leftId))) return;
+
+    const safeLeftId = String(leftId);
+    const safeRightId = String(rightId || "");
+    if (state.game2.puzzleLocks?.[safeLeftId]) return;
+
+    const byLeftId = new Map();
+    for (const item of state.game2.puzzleAssignments || []) {
+      if (item?.leftId) byLeftId.set(String(item.leftId), String(item.rightId || ""));
+    }
+
+    if (!safeRightId) {
+      byLeftId.delete(safeLeftId);
+    } else {
+      byLeftId.set(safeLeftId, safeRightId);
+    }
+
+    state.game2.puzzleAssignments = [...byLeftId.entries()].map(([lId, rId]) => ({
+      leftId: lId,
+      rightId: rId,
+    }));
+
+    let justLocked = false;
+    if (safeRightId && safeLeftId === safeRightId) {
+      state.game2.puzzleLocks[safeLeftId] = true;
+      justLocked = true;
+    }
+
+    const correctCount = Object.values(state.game2.puzzleLocks || {}).filter(Boolean).length;
+    const total = GAME2_PAIRS.length;
+    const solved = correctCount === total;
+
+    if (solved) {
+      state.game2.puzzleSolved = true;
+      state.game2.completedAt = Date.now();
+    }
+
+    io.to(roomCode).emit("game2PuzzleProgress", {
+      assignments: state.game2.puzzleAssignments,
+      puzzleLocks: state.game2.puzzleLocks,
+      leftId: safeLeftId,
+      rightId: safeRightId,
+      justLocked,
+      isCorrectSelection: safeRightId === safeLeftId,
+      correctCount,
+      total,
+      success: solved,
+    });
+
+    if (solved) {
+      io.to(roomCode).emit("game2Complete", { success: true });
+      state.game3.unlocked = true;
+      state.game3.introAccepted = false;
+      state.game3.startedAt = Date.now();
+      io.to(roomCode).emit("game3Available", { unlocked: true });
     }
 
     emitSessionStateToRoom(roomCode);
@@ -842,6 +986,7 @@ io.on("connection", (socket) => {
     }
 
     state.game3.currentIndex += 1;
+    state.game3.introAccepted = true;
     advanceGame3Turn(state);
 
     io.to(roomCode).emit("game3Progress", {
@@ -890,6 +1035,7 @@ async function startQuiz(roomCode) {
   if (players.length === 0) return;
 
   ROOM_STATES[roomCode] = {
+    ownerId: room.ownerId,
     questionIndex: 0,
     score: 0,
     players,
@@ -914,19 +1060,21 @@ async function startQuiz(roomCode) {
   emitSessionStateToRoom(roomCode);
 }
 
-function startQuizFromIntro(roomCode) {
+function startQuizFromIntro(roomCode, playerId, socket) {
   const state = ROOM_STATES[roomCode];
   if (!state || state.quizEnded) return;
   if (state.phase !== "INTRO") return;
+  if (!isRoomOwner(roomCode, playerId)) return emitOwnerOnlyError(socket);
 
   state.phase = "LOADING";
   emitSessionStateToRoom(roomCode);
   runQuiz(roomCode);
 }
 
-async function startGame4(roomCode) {
+async function startGame4(roomCode, playerId, socket) {
   const state = ROOM_STATES[roomCode];
   if (!state || !state.game4.unlocked || state.game4.started) return;
+  if (!isRoomOwner(roomCode, playerId)) return emitOwnerOnlyError(socket);
 
   state.game4.started = true;
   state.game4.startedAt = Date.now();
@@ -1123,6 +1271,8 @@ async function runQuiz(roomCode) {
   });
 
   state.game2.unlocked = true;
+  state.game2.entryOpened = false;
+  state.game2.introAccepted = false;
   state.game2.startedAt = Date.now();
   io.to(roomCode).emit("game2Available", {
     unlocked: true,

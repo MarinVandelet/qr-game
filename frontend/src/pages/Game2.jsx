@@ -36,10 +36,13 @@ export default function Game2() {
   const [puzzleSolved, setPuzzleSolved] = useState(false);
   const [game3Unlocked, setGame3Unlocked] = useState(false);
   const [introAccepted, setIntroAccepted] = useState(false);
+  const [ownerId, setOwnerId] = useState(null);
+  const [ownerOnlyMessage, setOwnerOnlyMessage] = useState("");
 
   const [leftItems, setLeftItems] = useState([]);
   const [rightItems, setRightItems] = useState([]);
   const [assignmentsMap, setAssignmentsMap] = useState({});
+  const [puzzleLocks, setPuzzleLocks] = useState({});
   const [validatedWords, setValidatedWords] = useState([]);
   const [wordValidationEntries, setWordValidationEntries] = useState([]);
 
@@ -80,14 +83,17 @@ export default function Game2() {
   useEffect(() => {
     socket.on("sessionState", (session) => {
       if (!session?.hasSession) return;
+      setOwnerId(session.ownerId || null);
 
       const game2 = session.game2 || {};
       setUnlocked(Boolean(game2.unlocked));
+      setIntroAccepted(Boolean(game2.introAccepted));
       setWordsSolved(Boolean(game2.wordsSolved));
       setPuzzleSolved(Boolean(game2.puzzleSolved));
       setLeftItems(game2.leftItems || []);
       setRightItems(game2.rightItems || []);
       setAssignmentsMap(toAssignmentsMap(game2.puzzleAssignments));
+      setPuzzleLocks(game2.puzzleLocks || {});
       setGame3Unlocked(Boolean(session?.game3?.unlocked));
       setValidatedWords(game2.validatedWords || []);
       setWordValidationEntries(game2.wordValidationEntries || []);
@@ -106,9 +112,7 @@ export default function Game2() {
         }
       }
 
-      if (game2.wordsSolved) {
-        setIntroAccepted(true);
-      }
+      if (game2.wordsSolved) setIntroAccepted(true);
     });
 
     socket.on("game2Available", () => {
@@ -119,6 +123,7 @@ export default function Game2() {
       setWordsResult(payload);
       if (payload?.success) {
         setWordsSolved(true);
+        setIntroAccepted(true);
       }
       if (Array.isArray(payload?.validatedWords)) {
         setValidatedWords(payload.validatedWords);
@@ -135,8 +140,34 @@ export default function Game2() {
       }
     });
 
+    socket.on("game2PuzzleProgress", (payload) => {
+      if (Array.isArray(payload?.assignments)) {
+        setAssignmentsMap(toAssignmentsMap(payload.assignments));
+      }
+      if (payload?.puzzleLocks) {
+        setPuzzleLocks(payload.puzzleLocks);
+      }
+      setPuzzleResult({
+        success: Boolean(payload?.success),
+        correctCount: payload?.correctCount || 0,
+        total: payload?.total || 6,
+      });
+      if (payload?.success) setPuzzleSolved(true);
+    });
+
     socket.on("game2Complete", () => {
       setPuzzleSolved(true);
+    });
+
+    socket.on("game2IntroStarted", () => {
+      setIntroAccepted(true);
+      setOwnerOnlyMessage("");
+    });
+
+    socket.on("ownerActionDenied", (payload) => {
+      setOwnerOnlyMessage(
+        payload?.message || "Seul le proprietaire de la partie peut lancer."
+      );
     });
 
     socket.on("game3Available", () => {
@@ -148,10 +179,16 @@ export default function Game2() {
       socket.off("game2Available");
       socket.off("game2WordsResult");
       socket.off("game2PuzzleResult");
+      socket.off("game2PuzzleProgress");
       socket.off("game2Complete");
       socket.off("game3Available");
+      socket.off("game2IntroStarted");
+      socket.off("ownerActionDenied");
     };
   }, []);
+
+  const playerId = Number(localStorage.getItem("playerId"));
+  const isOwner = ownerId && Number(ownerId) === Number(playerId);
 
   const lockedIndices = useMemo(
     () => words.map((_, idx) => wordValidationEntries[idx]?.status === "valid"),
@@ -228,6 +265,7 @@ export default function Game2() {
       });
       setWordValidationEntries(entries);
       if (success) setWordsSolved(true);
+      setIntroAccepted(true);
       return;
     }
 
@@ -245,10 +283,26 @@ export default function Game2() {
   };
 
   const onChangeAssignment = (leftId, rightId) => {
+    if (puzzleLocks[leftId]) return;
     setAssignmentsMap((prev) => ({
       ...prev,
       [leftId]: rightId,
     }));
+
+    if (isDevPreview) {
+      if (leftId === rightId) {
+        setPuzzleLocks((prev) => ({ ...prev, [leftId]: true }));
+      }
+      return;
+    }
+
+    if (!isDevPreview) {
+      socket.emit("game2SetPuzzleChoice", {
+        roomCode: code,
+        leftId,
+        rightId,
+      });
+    }
   };
 
   const submitPuzzle = () => {
@@ -277,6 +331,26 @@ export default function Game2() {
     socket.emit("game2SubmitPuzzle", {
       roomCode: code,
       assignments,
+    });
+  };
+
+  const startGame2FromIntro = () => {
+    if (isDevPreview) {
+      setIntroAccepted(true);
+      return;
+    }
+
+    if (!isOwner) {
+      setOwnerOnlyMessage(
+        "Seul le proprietaire de la partie peut lancer l'epreuve."
+      );
+      return;
+    }
+
+    setOwnerOnlyMessage("");
+    socket.emit("game2StartFromIntro", {
+      roomCode: code,
+      playerId,
     });
   };
 
@@ -318,12 +392,15 @@ export default function Game2() {
           </div>
           <motion.button
             whileTap={{ scale: 0.97 }}
-            whileHover={{ scale: 1.03 }}
-            onClick={() => setIntroAccepted(true)}
+            whileHover={{ scale: isOwner || isDevPreview ? 1.03 : 1 }}
+            onClick={startGame2FromIntro}
             className="mt-6 bg-white text-blue-900 px-6 py-3 rounded-xl font-semibold"
           >
-            Commencer l&apos;épreuve 2
+            {isOwner || isDevPreview ? "Commencer l'épreuve 2" : "Attendre le chef de salle"}
           </motion.button>
+          {ownerOnlyMessage && (
+            <p className="mt-3 text-sm opacity-90">{ownerOnlyMessage}</p>
+          )}
         </motion.div>
       </div>
     );
@@ -403,13 +480,20 @@ export default function Game2() {
               {leftItems.map((item) => (
                 <div
                   key={item.id}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center rounded-xl bg-white/10 p-4 border border-white/20"
+                  className={`grid grid-cols-1 md:grid-cols-2 gap-3 items-center rounded-xl p-4 border ${
+                    puzzleLocks[item.id]
+                      ? "bg-emerald-500/30 border-emerald-200/40"
+                      : "bg-white/10 border-white/20"
+                  }`}
                 >
                   <div className="font-semibold">{item.label}</div>
                   <select
-                    className="rounded-lg px-3 py-2 text-blue-950"
+                    className={`rounded-lg px-3 py-2 text-blue-950 ${
+                      puzzleLocks[item.id] ? "bg-emerald-200 font-semibold" : ""
+                    }`}
                     value={assignmentsMap[item.id] || ""}
                     onChange={(event) => onChangeAssignment(item.id, event.target.value)}
+                    disabled={Boolean(puzzleLocks[item.id])}
                   >
                     <option value="">Choisir une réponse</option>
                     {rightItems.map((opt) => (

@@ -42,6 +42,8 @@ export default function Game4() {
 
   const [score, setScore] = useState(0);
   const [total, setTotal] = useState(6);
+  const [ownerId, setOwnerId] = useState(null);
+  const [ownerOnlyMessage, setOwnerOnlyMessage] = useState("");
 
   const [startTime, setStartTime] = useState(null);
   const [duration, setDuration] = useState(1);
@@ -75,6 +77,7 @@ export default function Game4() {
   useEffect(() => {
     socket.on("sessionState", (session) => {
       if (!session?.hasSession) return;
+      setOwnerId(session.ownerId || null);
       const game4 = session.game4 || {};
 
       setUnlocked(Boolean(game4.unlocked));
@@ -110,6 +113,12 @@ export default function Game4() {
 
     socket.on("game4Available", () => setUnlocked(true));
     socket.on("game4Start", () => setStarted(true));
+
+    socket.on("ownerActionDenied", (payload) => {
+      setOwnerOnlyMessage(
+        payload?.message || "Seul le proprietaire de la partie peut lancer."
+      );
+    });
 
     socket.on("game4QuestionData", (payload) => {
       setQuestion(payload);
@@ -154,8 +163,9 @@ export default function Game4() {
       socket.off("game4Phase");
       socket.off("game4AnswerResult");
       socket.off("game4End");
+      socket.off("ownerActionDenied");
     };
-  }, []);
+  }, [code, navigate]);
 
   const computeProgress = () => {
     if (!startTime) return 1;
@@ -167,10 +177,23 @@ export default function Game4() {
   const progress = computeProgress();
 
   const isMyTurn = Number(playerId) === Number(activePlayerId);
+  const isOwner = ownerId && Number(ownerId) === Number(playerId);
 
   const launchGame4 = () => {
     if (isDevPreview) return;
-    socket.emit("startGame4", code);
+
+    if (!isOwner) {
+      setOwnerOnlyMessage(
+        "Seul le proprietaire de la partie peut lancer l'epreuve."
+      );
+      return;
+    }
+
+    setOwnerOnlyMessage("");
+    socket.emit("startGame4", {
+      roomCode: code,
+      playerId,
+    });
   };
 
   const sendAnswer = (index) => {
@@ -210,12 +233,15 @@ export default function Game4() {
           <p className="mt-4 opacity-90">6 questions, sans images.</p>
           <motion.button
             whileTap={{ scale: 0.96 }}
-            whileHover={{ scale: 1.03 }}
+            whileHover={{ scale: isOwner || isDevPreview ? 1.03 : 1 }}
             onClick={launchGame4}
             className="mt-6 bg-white text-blue-900 px-6 py-3 rounded-xl font-semibold"
           >
-            Lancer le Jeu 4
+            {isOwner || isDevPreview ? "Lancer le Jeu 4" : "Attendre le chef de salle"}
           </motion.button>
+          {ownerOnlyMessage && (
+            <p className="mt-3 text-sm opacity-90">{ownerOnlyMessage}</p>
+          )}
         </div>
       </div>
     );

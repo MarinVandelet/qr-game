@@ -20,6 +20,8 @@ export default function Game3() {
   const [solvedEntries, setSolvedEntries] = useState([]);
   const [game4Unlocked, setGame4Unlocked] = useState(false);
   const [introAccepted, setIntroAccepted] = useState(false);
+  const [ownerId, setOwnerId] = useState(null);
+  const [ownerOnlyMessage, setOwnerOnlyMessage] = useState("");
 
   useEffect(() => {
     socket.emit("joinRoom", code);
@@ -37,9 +39,11 @@ export default function Game3() {
   useEffect(() => {
     socket.on("sessionState", (session) => {
       if (!session?.hasSession) return;
+      setOwnerId(session.ownerId || null);
 
       const game3 = session.game3 || {};
       setUnlocked(Boolean(game3.unlocked));
+      setIntroAccepted(Boolean(game3.introAccepted));
       setCompleted(Boolean(game3.completed));
       setCurrentIndex(Number(game3.currentIndex || 0));
       setTotal(Number(game3.total || 10));
@@ -89,14 +93,29 @@ export default function Game3() {
       setGame4Unlocked(true);
     });
 
+    socket.on("game3IntroStarted", () => {
+      setIntroAccepted(true);
+      setOwnerOnlyMessage("");
+    });
+
+    socket.on("ownerActionDenied", (payload) => {
+      setOwnerOnlyMessage(
+        payload?.message || "Seul le proprietaire de la partie peut lancer."
+      );
+    });
+
     return () => {
       socket.off("sessionState");
       socket.off("game3Available");
       socket.off("game3Progress");
       socket.off("game3Complete");
       socket.off("game4Available");
+      socket.off("game3IntroStarted");
+      socket.off("ownerActionDenied");
     };
   }, []);
+
+  const isOwner = ownerId && Number(ownerId) === Number(playerId);
 
   const isMyTurn = useMemo(() => {
     if (!activePlayerId) return false;
@@ -113,6 +132,26 @@ export default function Game3() {
       roomCode: code,
       playerId,
       word: inputWord,
+    });
+  };
+
+  const startGame3FromIntro = () => {
+    if (isDevPreview) {
+      setIntroAccepted(true);
+      return;
+    }
+
+    if (!isOwner) {
+      setOwnerOnlyMessage(
+        "Seul le proprietaire de la partie peut lancer l'epreuve."
+      );
+      return;
+    }
+
+    setOwnerOnlyMessage("");
+    socket.emit("game3StartFromIntro", {
+      roomCode: code,
+      playerId,
     });
   };
 
@@ -156,12 +195,15 @@ export default function Game3() {
           </div>
           <motion.button
             whileTap={{ scale: 0.97 }}
-            whileHover={{ scale: 1.03 }}
-            onClick={() => setIntroAccepted(true)}
+            whileHover={{ scale: isOwner || isDevPreview ? 1.03 : 1 }}
+            onClick={startGame3FromIntro}
             className="mt-6 bg-white text-blue-900 px-6 py-3 rounded-xl font-semibold"
           >
-            Commencer l&apos;épreuve 3
+            {isOwner || isDevPreview ? "Commencer l'épreuve 3" : "Attendre le chef de salle"}
           </motion.button>
+          {ownerOnlyMessage && (
+            <p className="mt-3 text-sm opacity-90">{ownerOnlyMessage}</p>
+          )}
         </motion.div>
       </div>
     );

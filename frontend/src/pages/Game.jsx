@@ -31,6 +31,8 @@ export default function Game() {
   const [success, setSuccess] = useState(false);
   const [game2Unlocked, setGame2Unlocked] = useState(false);
   const [introLaunched, setIntroLaunched] = useState(false);
+  const [ownerId, setOwnerId] = useState(null);
+  const [ownerOnlyMessage, setOwnerOnlyMessage] = useState("");
 
   const [startTime, setStartTime] = useState(null);
   const [duration, setDuration] = useState(1);
@@ -38,6 +40,7 @@ export default function Game() {
   const [, setForce] = useState(0);
 
   const playerId = Number(localStorage.getItem("playerId"));
+  const isOwner = ownerId && Number(ownerId) === Number(playerId);
 
   useEffect(() => {
     const interval = setInterval(() => setForce((x) => x + 1), 100);
@@ -82,6 +85,7 @@ export default function Game() {
 
     socket.on("sessionState", (session) => {
       if (!session?.hasSession) return;
+      setOwnerId(session.ownerId || null);
 
       const quizState = session.quiz || {};
 
@@ -106,6 +110,20 @@ export default function Game() {
       if (session?.game2?.unlocked) {
         setGame2Unlocked(true);
       }
+
+      if (quizState.quizEnded && session?.game2?.entryOpened) {
+        navigate(`/game2/${code}`);
+      }
+    });
+
+    socket.on("ownerActionDenied", (payload) => {
+      setOwnerOnlyMessage(
+        payload?.message || "Seul le proprietaire de la partie peut lancer."
+      );
+    });
+
+    socket.on("game2EntryOpened", () => {
+      navigate(`/game2/${code}`);
     });
 
     return () => {
@@ -115,8 +133,10 @@ export default function Game() {
       socket.off("quizEnd");
       socket.off("game2Available");
       socket.off("sessionState");
+      socket.off("ownerActionDenied");
+      socket.off("game2EntryOpened");
     };
-  }, []);
+  }, [code, navigate]);
 
   const computeProgress = () => {
     if (!startTime) return 1;
@@ -140,9 +160,33 @@ export default function Game() {
   };
 
   const launchQuizFromIntro = () => {
+    if (!isOwner) {
+      setOwnerOnlyMessage(
+        "Seul le proprietaire de la partie peut lancer l'epreuve."
+      );
+      return;
+    }
     if (introLaunched) return;
+    setOwnerOnlyMessage("");
     setIntroLaunched(true);
-    socket.emit("startQuizFromIntro", code);
+    socket.emit("startQuizFromIntro", {
+      roomCode: code,
+      playerId,
+    });
+  };
+
+  const continueToGame2 = () => {
+    if (!isOwner) {
+      setOwnerOnlyMessage(
+        "Seul le proprietaire de la partie peut lancer l'epreuve suivante."
+      );
+      return;
+    }
+
+    socket.emit("enterGame2FromQuizEnd", {
+      roomCode: code,
+      playerId,
+    });
   };
 
   if (quizEnded) {
@@ -165,11 +209,15 @@ export default function Game() {
               : "Quiz termine. Passez au Jeu 2."}
           </p>
 
+          {ownerOnlyMessage && (
+            <p className="text-sm opacity-90 mb-4">{ownerOnlyMessage}</p>
+          )}
+
           {game2Unlocked ? (
             <motion.button
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.05 }}
-              onClick={() => navigate(`/game2/${code}`)}
+              onClick={continueToGame2}
               className="bg-white text-blue-800 px-6 py-3 rounded-xl shadow-lg font-bold w-full"
             >
               Continuer vers Jeu 2
@@ -219,11 +267,14 @@ export default function Game() {
             whileTap={{ scale: 0.97 }}
             whileHover={{ scale: introLaunched ? 1 : 1.03 }}
             onClick={launchQuizFromIntro}
-            disabled={introLaunched}
+            disabled={introLaunched && isOwner}
             className="mt-6 bg-white text-blue-900 px-6 py-3 rounded-xl font-semibold disabled:opacity-60"
           >
-            {introLaunched ? "Lancement..." : "Commencer l'épreuve 1"}
+            {isOwner ? (introLaunched ? "Lancement..." : "Commencer l'épreuve 1") : "Attendre le chef de salle"}
           </motion.button>
+          {ownerOnlyMessage && (
+            <p className="mt-3 text-sm opacity-90">{ownerOnlyMessage}</p>
+          )}
         </motion.div>
       </div>
     );
