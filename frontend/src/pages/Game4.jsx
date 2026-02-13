@@ -11,10 +11,19 @@ const PHASES = {
   END: "END",
 };
 
+const DEV_GAME4_QUESTIONS = [
+  {
+    questionText: "Mode test: aperçu du quiz 4",
+    answers: ["Réponse A", "Réponse B", "Réponse C", "Réponse D"],
+    correctIndex: 2,
+  },
+];
+
 export default function Game4() {
   const { code } = useParams();
   const navigate = useNavigate();
   const playerId = Number(localStorage.getItem("playerId"));
+  const isDevPreview = import.meta.env.DEV && code === "test";
 
   const [unlocked, setUnlocked] = useState(false);
   const [started, setStarted] = useState(false);
@@ -46,6 +55,22 @@ export default function Game4() {
   useEffect(() => {
     socket.emit("joinRoom", code);
   }, [code]);
+
+  useEffect(() => {
+    if (!isDevPreview) return;
+    setUnlocked(true);
+    setStarted(true);
+    setQuestionIndex(0);
+    setQuestion({
+      questionText: DEV_GAME4_QUESTIONS[0].questionText,
+      answers: DEV_GAME4_QUESTIONS[0].answers,
+    });
+    setPhase(PHASES.ANSWER);
+    setActivePlayerId(playerId || 1);
+    setActivePlayerName("Vous");
+    setDuration(1);
+    setStartTime(Date.now());
+  }, [isDevPreview, playerId]);
 
   useEffect(() => {
     socket.on("sessionState", (session) => {
@@ -144,6 +169,7 @@ export default function Game4() {
   const isMyTurn = Number(playerId) === Number(activePlayerId);
 
   const launchGame4 = () => {
+    if (isDevPreview) return;
     socket.emit("startGame4", code);
   };
 

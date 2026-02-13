@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { socket } from "../socket";
 
 const QUESTION_PHASES = {
+  INTRO: "INTRO",
   THINK: "THINK",
   ANSWER: "ANSWER",
   RESULT: "RESULT",
@@ -188,6 +189,31 @@ export default function Game() {
     );
   }
 
+  if (phase === QUESTION_PHASES.INTRO) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-800 via-blue-700 to-cyan-600 flex items-center justify-center p-4 text-white">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-2xl rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 p-7 md:p-10"
+        >
+          <p className="uppercase text-xs tracking-[0.25em] opacity-80">Épreuve 1</p>
+          <h1 className="text-3xl md:text-4xl font-black mt-2">Quiz découverte</h1>
+          <p className="mt-4 text-white/90 leading-relaxed">
+            6 questions. Une seule personne répond par tour. Observez l&apos;image, échangez
+            rapidement, puis validez la meilleure réponse au bon moment.
+          </p>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+            <div className="rounded-xl bg-white/10 p-3">Temps de réflexion: 10s</div>
+            <div className="rounded-xl bg-white/10 p-3">Temps de réponse: 20s</div>
+            <div className="rounded-xl bg-white/10 p-3">Objectif: débloquer l&apos;épreuve 2</div>
+          </div>
+          <p className="mt-6 text-sm opacity-80">Le quiz démarre automatiquement...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-700 to-purple-700 flex items-center justify-center p-4 text-white">
       <motion.div
@@ -295,3 +321,4 @@ export default function Game() {
     </div>
   );
 }
+

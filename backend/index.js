@@ -278,6 +278,7 @@ const GAME2_PAIRS = game2Config.map((pair) => {
   return {
     ...pair,
     acceptedWords,
+    rightLabelNormalized: normalizeWord(pair.rightLabel),
   };
 });
 
@@ -286,6 +287,35 @@ for (const pair of GAME2_PAIRS) {
   pair.acceptedWords.forEach((word) => {
     GAME2_ACCEPTED_TO_PAIR.set(word, pair.id);
   });
+}
+
+function findGame2PairId(normalizedInput) {
+  if (!normalizedInput) return null;
+
+  const exactPairId = GAME2_ACCEPTED_TO_PAIR.get(normalizedInput);
+  if (exactPairId) return exactPairId;
+
+  const candidateIds = new Set();
+
+  for (const pair of GAME2_PAIRS) {
+    if (isApproximateMatch(normalizedInput, pair.rightLabelNormalized)) {
+      candidateIds.add(pair.id);
+      continue;
+    }
+
+    for (const acceptedWord of pair.acceptedWords) {
+      if (isApproximateMatch(normalizedInput, acceptedWord)) {
+        candidateIds.add(pair.id);
+        break;
+      }
+    }
+  }
+
+  if (candidateIds.size === 1) {
+    return [...candidateIds][0];
+  }
+
+  return null;
 }
 
 const GAME3_RIDDLES = game3Config.map((item, index) => ({
@@ -449,7 +479,7 @@ function buildWordValidation(words) {
 
     seenNormalizedWords.add(normalized);
 
-    const pairId = GAME2_ACCEPTED_TO_PAIR.get(normalized);
+    const pairId = findGame2PairId(normalized);
     if (!pairId) {
       return {
         input,
@@ -855,7 +885,7 @@ async function startQuiz(roomCode) {
     questionIndex: 0,
     score: 0,
     players,
-    phase: "LOADING",
+    phase: "INTRO",
     currentQuestion: null,
     quizEnded: false,
     success: false,
@@ -865,17 +895,17 @@ async function startQuiz(roomCode) {
     finalResults: null,
   };
 
+  io.to(roomCode).emit("gameStart");
+
   io.to(roomCode).emit("phase", {
-    type: "LOADING",
-    duration: 1500,
+    type: "INTRO",
+    duration: 12000,
     startTime: Date.now(),
   });
 
   emitSessionStateToRoom(roomCode);
 
-  await wait(1500);
-
-  io.to(roomCode).emit("gameStart");
+  await wait(12000);
   runQuiz(roomCode);
 }
 
