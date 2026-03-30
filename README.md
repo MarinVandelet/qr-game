@@ -156,5 +156,3 @@ sudo systemctl reload nginx
 
 ## Notes importantes
 - Les fichiers `.env` ne doivent pas être versionnés.
-- Si tu changes les variables d'env backend, fais `pm2 restart ... --update-env`.
-- Si tu vois encore des anciennes versions côté navigateur, vide le cache.
