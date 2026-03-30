@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+﻿// Ecran pour rejoindre un salon existant
+import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +11,7 @@ export default function JoinRoom() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const playerId = localStorage.getItem("playerId");
-
+  // Tente de rejoindre le salon avec le code saisi
   const handleJoin = async () => {
     try {
       await axios.post(`${API_URL}/api/room/join`, {
@@ -57,3 +58,12 @@ export default function JoinRoom() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+

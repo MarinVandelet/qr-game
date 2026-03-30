@@ -1,3 +1,4 @@
+﻿// Source of truth for Game 2 pairs and accepted QR words.
 module.exports = [
   {
     id: "web-dev",
@@ -36,3 +37,5 @@ module.exports = [
     acceptedWords: ["node", "nodejs", "node.js"],
   },
 ];
+
+

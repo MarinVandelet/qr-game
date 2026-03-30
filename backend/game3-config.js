@@ -1,3 +1,4 @@
+﻿// Ordered answer list for Game 3 (with accepted variants).
 module.exports = [
   {
     id: 1,
@@ -50,3 +51,5 @@ module.exports = [
     acceptedWords: ["dragon ball", "dragon ball Z", "Dragonball", "dbz"],
   },
 ];
+
+

@@ -23,10 +23,12 @@ export default function Game3() {
   const [ownerId, setOwnerId] = useState(null);
   const [ownerOnlyMessage, setOwnerOnlyMessage] = useState("");
 
+  // Connexion au salon pour ecouter les evenements temps reel
   useEffect(() => {
     socket.emit("joinRoom", code);
   }, [code]);
 
+  // Mode test local: initialise un etat jouable rapidement
   useEffect(() => {
     if (!isDevPreview) return;
     setUnlocked(true);
@@ -36,7 +38,9 @@ export default function Game3() {
     setActivePlayerName("Vous");
   }, [isDevPreview, playerId]);
 
+  // Listeners principaux pour suivre la progression du jeu 3
   useEffect(() => {
+    // Recoit un etat complet (pratique apres rechargement)
     socket.on("sessionState", (session) => {
       if (!session?.hasSession) return;
       setOwnerId(session.ownerId || null);
@@ -61,6 +65,7 @@ export default function Game3() {
       setUnlocked(true);
     });
 
+    // Retour serveur apres tentative (correcte ou non)
     socket.on("game3Progress", (payload) => {
       if (payload?.error) {
         setFeedback(payload.error);
@@ -117,6 +122,7 @@ export default function Game3() {
 
   const isOwner = ownerId && Number(ownerId) === Number(playerId);
 
+  // Vrai uniquement si ce joueur est actuellement actif
   const isMyTurn = useMemo(() => {
     if (!activePlayerId) return false;
     return Number(playerId) === Number(activePlayerId);
@@ -127,6 +133,7 @@ export default function Game3() {
     return Math.round((solvedEntries.length / total) * 100);
   }, [solvedEntries.length, total]);
 
+  // Envoie le mot saisi pour l'enigme en cours
   const submitWord = () => {
     socket.emit("game3SubmitWord", {
       roomCode: code,
@@ -282,3 +289,10 @@ export default function Game3() {
     </div>
   );
 }
+
+
+
+
+
+
+

@@ -1,3 +1,4 @@
+﻿// Page finale: score global et detail des points
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -8,6 +9,7 @@ export default function FinalResults() {
   const { code } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const isSkipMode = import.meta.env.DEV && code === "test";
 
   const [finalResults, setFinalResults] = useState(location.state?.finalResults || null);
 
@@ -20,11 +22,35 @@ export default function FinalResults() {
     return () => socket.off("sessionState");
   }, [code]);
 
+  useEffect(() => {
+    if (!isSkipMode || finalResults) return;
+    const forceMax = sessionStorage.getItem("dev_force_max_score") === "1";
+    if (!forceMax) return;
+
+    setFinalResults({
+      total: 100,
+      breakdown: {
+        quiz1Points: 40,
+        game4Points: 40,
+        game2TimePoints: 10,
+        game3TimePoints: 10,
+      },
+      raw: {
+        quiz1Score: 6,
+        quiz1Total: 6,
+        game4Score: 6,
+        game4Total: 6,
+        game2DurationSec: 0,
+        game3DurationSec: 0,
+      },
+    });
+  }, [isSkipMode, finalResults]);
+
   if (!finalResults) {
     return (
       <div className="app-shell text-white">
         <div className="glass-card max-w-xl p-8 text-center">
-          <h1 className="text-3xl font-bold">R�sultats finaux</h1>
+          <h1 className="text-3xl font-bold">Résultats finaux</h1>
           <p className="soft-text mt-3">Calcul du score en cours...</p>
         </div>
       </div>
@@ -87,3 +113,7 @@ export default function FinalResults() {
     </div>
   );
 }
+
+
+
+

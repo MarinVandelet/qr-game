@@ -8,6 +8,7 @@ import { socket } from "../socket";
 
 export default function WaitingRoom() {
   const navigate = useNavigate();
+  // Le code salon est lu depuis l'URL
   const code = window.location.pathname.split("/").pop();
 
   const [players, setPlayers] = useState([]);
@@ -16,6 +17,7 @@ export default function WaitingRoom() {
 
   const playerId = Number(localStorage.getItem("playerId"));
 
+  // Solution de secours: on recharge la liste regulierement
   const fetchPlayers = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/room/players/${code}`);
@@ -29,16 +31,19 @@ export default function WaitingRoom() {
   };
 
   useEffect(() => {
+    // Chargement initial + verification reguliere toutes les 1.5s
     fetchPlayers();
     const interval = setInterval(fetchPlayers, 1500);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
+    // Connexion socket pour recevoir les transitions de jeu
     socket.emit("joinRoom", code);
 
     socket.on("gameStart", () => navigate(`/game/${code}`));
 
+    // Repositionne automatiquement un joueur qui recharge cet ecran
     socket.on("sessionState", (session) => {
       if (session?.finalResults) return navigate(`/final/${code}`);
       if (session?.game4?.unlocked) return navigate(`/game4/${code}`);
@@ -55,6 +60,7 @@ export default function WaitingRoom() {
 
   const isOwner = ownerId && playerId === ownerId;
 
+  // Le lancement est reserve au chef de salon
   const handleStart = () => {
     socket.emit("startGame", code);
   };
@@ -145,3 +151,4 @@ export default function WaitingRoom() {
     </div>
   );
 }
+

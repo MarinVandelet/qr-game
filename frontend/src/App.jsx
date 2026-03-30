@@ -1,3 +1,4 @@
+﻿// Routage principal de l'application
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -135,3 +136,11 @@ export default function App() {
     </Routes>
   );
 }
+
+
+
+
+
+
+
+

@@ -1,3 +1,4 @@
+﻿// Main backend entry: REST endpoints + Socket.IO room/game state sync.
 const express = require("express");
 const cors = require("cors");
 const db = require("./db");
@@ -33,7 +34,7 @@ app.get("/", (req, res) => {
 app.post("/api/player", (req, res) => {
   const { firstName, lastName } = req.body;
   if (!firstName || !lastName) {
-    return res.status(400).json({ error: "Nom et prénom requis" });
+    return res.status(400).json({ error: "Nom et prÃ©nom requis" });
   }
 
   const now = new Date().toISOString();
@@ -133,37 +134,37 @@ app.get("/api/room/players/:code", (req, res) => {
 
 const QUESTIONS = [
   {
-    questionText: "À quoi sert ce logiciel (VS Code) ?",
+    questionText: "Ã€ quoi sert ce logiciel (VS Code) ?",
     imageUrl: "/questions/vscode.png",
-    answers: ["Orienté HTML", "Héberger", "Maintenance", "Développer"],
+    answers: ["OrientÃ© HTML", "HÃ©berger", "Maintenance", "DÃ©velopper"],
     correctIndex: 3,
   },
   {
-    questionText: "À quoi correspond ce logo ?",
+    questionText: "Ã€ quoi correspond ce logo ?",
     imageUrl: "/questions/logohtml.png",
     answers: ["Yell5", "HTML", "JetBrains", "SQL"],
     correctIndex: 1,
   },
   {
-    questionText: "À quoi correspond ce logo ?",
+    questionText: "Ã€ quoi correspond ce logo ?",
     imageUrl: "/questions/logocss.png",
     answers: ["CSS", "Node.js", "TScript", "BlueStack"],
     correctIndex: 0,
   },
   {
-    questionText: "À quoi correspond ce logo ?",
+    questionText: "Ã€ quoi correspond ce logo ?",
     imageUrl: "/questions/logojs.png",
     answers: ["JSite", "Ruby", "JavaScript", "PHP"],
     correctIndex: 2,
   },
   {
-    questionText: "À quoi correspond ce logo ?",
+    questionText: "Ã€ quoi correspond ce logo ?",
     imageUrl: "/questions/logopy.png",
     answers: ["Reverze", "Vercel", "Snake", "Python"],
     correctIndex: 3,
   },
   {
-    questionText: "Où dois-je écrire mon code ?",
+    questionText: "OÃ¹ dois-je Ã©crire mon code ?",
     imageUrl: "/questions/code.png",
     answers: ["Title", "html", "Body", "Head"],
     correctIndex: 2,
@@ -172,17 +173,17 @@ const QUESTIONS = [
 
 const GAME4_QUESTIONS = [
   {
-    questionText: "À quoi servait Internet au départ ?",
+    questionText: "Ã€ quoi servait Internet au dÃ©part ?",
     answers: [
-      "À jouer en ligne",
-      "À regarder des films",
-      "À échanger des informations entre chercheurs",
-      "À faire des achats",
+      "Ã€ jouer en ligne",
+      "Ã€ regarder des films",
+      "Ã€ Ã©changer des informations entre chercheurs",
+      "Ã€ faire des achats",
     ],
     correctIndex: 2,
   },
   {
-    questionText: "Qui est considérée comme la première programmeuse de l'histoire",
+    questionText: "Qui est considÃ©rÃ©e comme la premiÃ¨re programmeuse de l'histoire",
     answers: [
       "Marie Curie",
       "Ada Lovelace",
@@ -192,12 +193,12 @@ const GAME4_QUESTIONS = [
     correctIndex: 1,
   },
   {
-    questionText: "Comment s'appelait le premier réseau à l'origine d'Internet ?",
+    questionText: "Comment s'appelait le premier rÃ©seau Ã  l'origine d'Internet ?",
     answers: ["INTRANET", "WIFI-NET", "WEBNET", "ARPANET"],
     correctIndex: 3,
   },
   {
-    questionText: "Qui est considéré comme le père de l'informatique moderne ?",
+    questionText: "Qui est considÃ©rÃ© comme le pÃ¨re de l'informatique moderne ?",
     answers: [
       "Alan Turing",
       "Bill Gates",
@@ -207,18 +208,18 @@ const GAME4_QUESTIONS = [
     correctIndex: 0,
   },
   {
-    questionText: "Quel mouvement des années 1960 à influencé l'esprit libre et collaboratif d'internet ",
+    questionText: "Quel mouvement des annÃ©es 1960 Ã  influencÃ© l'esprit libre et collaboratif d'internet ",
     answers: ["Le mouvement punk ", "Le mouvement gothique", "Le mouvement hippies", "Le mouvement disco"],
     correctIndex: 2,
   },
   {
-    questionText: "Quel est le moteur de recherche le plus utilisé ?",
+    questionText: "Quel est le moteur de recherche le plus utilisÃ© ?",
     answers: ["Google", "Yahoo", "Bing", "Safari"],
     correctIndex: 0,
   },
 ];
-
-const ROOM_STATES = {};
+  //
+  const ROOM_STATES = {};
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -233,6 +234,7 @@ function shuffle(array) {
   return copy;
 }
 
+// Normalize text input to make validation tolerant.
 function normalizeWord(value) {
   return String(value || "")
     .trim()
@@ -452,6 +454,7 @@ function getSessionState(roomCode) {
   };
 }
 
+// Send a full snapshot so everyone stays synced, including after refresh.
 function emitSessionStateToRoom(roomCode) {
   io.to(roomCode).emit("sessionState", getSessionState(roomCode));
 }
@@ -474,7 +477,7 @@ function isRoomOwner(roomCode, playerId) {
 
 function emitOwnerOnlyError(socket) {
   socket.emit("ownerActionDenied", {
-    message: "Seul le propriétaire de la partie peut lancer cette étape.",
+    message: "Seul le propriÃ©taire de la partie peut lancer cette Ã©tape.",
   });
 }
 
@@ -595,6 +598,7 @@ function computeTimePoints(startedAt, completedAt, maxPoints, targetSec, maxSec)
   return Math.round(clamp(ratio, 0, 1) * maxPoints);
 }
 
+// Build final score out of 100 using quiz + time-based points.
 function buildFinalResults(state) {
   const quiz1Points = Math.round((state.score / QUESTIONS.length) * 40);
   const game4Points = Math.round((state.game4.score / GAME4_QUESTIONS.length) * 40);
@@ -646,6 +650,7 @@ function buildFinalResults(state) {
   };
 }
 
+// Real-time events: room join, game progression, answers, transitions.
 io.on("connection", (socket) => {
   console.log("Socket connected:", socket.id);
 
@@ -665,6 +670,17 @@ io.on("connection", (socket) => {
   socket.on("startGame", (roomCode) => {
     if (!roomCode) return;
     startQuiz(roomCode);
+  });
+
+  socket.on("startDevSession", ({ roomCode, playerId }) => {
+    if (!roomCode || roomCode !== "test") return;
+    startDevSession(roomCode, playerId, socket);
+  });
+
+  socket.on("devSkipStage", ({ roomCode, stage, playerId }) => {
+    if (!roomCode || roomCode !== "test") return;
+    if (!stage) return;
+    devSkipStage(roomCode, stage, playerId, socket);
   });
 
   socket.on("startQuizFromIntro", (payload) => {
@@ -964,7 +980,7 @@ io.on("connection", (socket) => {
     if (state.game3.completed) {
       return socket.emit("game3Progress", {
         success: false,
-        error: "Jeu 3 déjà terminé",
+        error: "Jeu 3 dÃ©jÃ  terminÃ©",
       });
     }
 
@@ -979,7 +995,7 @@ io.on("connection", (socket) => {
     if (!currentRiddle) {
       return socket.emit("game3Progress", {
         success: false,
-        error: "Énigme introuvable",
+        error: "Ã‰nigme introuvable",
       });
     }
 
@@ -991,7 +1007,7 @@ io.on("connection", (socket) => {
         completed: false,
         currentIndex: state.game3.currentIndex,
         total: state.game3.total,
-        message: "Mauvais mot, réessayez.",
+        message: "Mauvais mot, rÃ©essayez.",
         activePlayerId: state.game3.activePlayerId,
         activePlayerName: state.game3.activePlayerName,
       });
@@ -1014,7 +1030,7 @@ io.on("connection", (socket) => {
         completed: true,
         currentIndex: state.game3.currentIndex,
         total: state.game3.total,
-        message: "Bravo, les 10 énigmes sont validées.",
+        message: "Bravo, les 10 Ã©nigmes sont validÃ©es.",
         activePlayerId: state.game3.activePlayerId,
         activePlayerName: state.game3.activePlayerName,
       });
@@ -1041,7 +1057,7 @@ io.on("connection", (socket) => {
       completed: false,
       currentIndex: state.game3.currentIndex,
       total: state.game3.total,
-      message: "Bonne réponse. Énigme suivante.",
+      message: "Bonne rÃ©ponse. Ã‰nigme suivante.",
       activePlayerId: state.game3.activePlayerId,
       activePlayerName: state.game3.activePlayerName,
     });
@@ -1107,6 +1123,137 @@ async function startQuiz(roomCode) {
   emitSessionStateToRoom(roomCode);
 }
 
+function startDevSession(roomCode, playerId, socket) {
+  if (ROOM_STATES[roomCode]) {
+    emitSessionStateToRoom(roomCode);
+    return;
+  }
+
+  const devPlayerId = Number(playerId) || 1;
+  const players = [
+    {
+      id: devPlayerId,
+      firstName: "Dev",
+      lastName: "Tester",
+    },
+  ];
+
+  ROOM_STATES[roomCode] = {
+    ownerId: devPlayerId,
+    questionIndex: 0,
+    score: 0,
+    players,
+    phase: "INTRO",
+    currentQuestion: null,
+    quizEnded: false,
+    success: false,
+    game2: createInitialGame2State(),
+    game3: createInitialGame3State(players),
+    game4: createInitialGame4State(),
+    finalResults: null,
+  };
+
+  io.to(roomCode).emit("gameStart");
+  io.to(roomCode).emit("phase", {
+    type: "INTRO",
+    duration: 0,
+    startTime: Date.now(),
+  });
+
+  emitSessionStateToRoom(roomCode);
+  emitSessionStateToSocket(socket, roomCode);
+}
+
+function devEnsureSession(roomCode, playerId, socket) {
+  if (!ROOM_STATES[roomCode]) {
+    startDevSession(roomCode, playerId, socket);
+  }
+  return ROOM_STATES[roomCode];
+}
+
+function devSkipStage(roomCode, stage, playerId, socket) {
+  const state = devEnsureSession(roomCode, playerId, socket);
+  if (!state) return;
+
+  const target = String(stage).toLowerCase();
+
+  if (target === "game2") {
+    state.quizEnded = true;
+    state.phase = "END";
+    state.success = true;
+    state.score = QUESTIONS.length;
+    state.game2.unlocked = true;
+    state.game2.entryOpened = true;
+    state.game2.introAccepted = false;
+  } else if (target === "game3") {
+    state.quizEnded = true;
+    state.phase = "END";
+    state.success = true;
+    state.score = QUESTIONS.length;
+    state.game2.unlocked = true;
+    state.game2.entryOpened = true;
+    state.game2.introAccepted = true;
+    state.game2.wordsSolved = true;
+    state.game2.puzzleSolved = true;
+    state.game3.unlocked = true;
+    state.game3.introAccepted = false;
+  } else if (target === "game4") {
+    state.quizEnded = true;
+    state.phase = "END";
+    state.success = true;
+    state.score = QUESTIONS.length;
+    state.game2.unlocked = true;
+    state.game2.entryOpened = true;
+    state.game2.introAccepted = true;
+    state.game2.wordsSolved = true;
+    state.game2.puzzleSolved = true;
+    state.game3.unlocked = true;
+    state.game3.introAccepted = true;
+    state.game3.completed = true;
+    state.game3.currentIndex = state.game3.total;
+    state.game4.unlocked = true;
+    state.game4.started = false;
+  } else if (target === "final") {
+    state.quizEnded = true;
+    state.phase = "END";
+    state.success = true;
+    state.score = QUESTIONS.length;
+    state.game2.unlocked = true;
+    state.game2.entryOpened = true;
+    state.game2.introAccepted = true;
+    state.game2.wordsSolved = true;
+    state.game2.puzzleSolved = true;
+    state.game3.unlocked = true;
+    state.game3.introAccepted = true;
+    state.game3.completed = true;
+    state.game3.currentIndex = state.game3.total;
+    state.game4.unlocked = true;
+    state.game4.started = true;
+    state.game4.ended = true;
+    state.game4.score = GAME4_QUESTIONS.length;
+    state.finalResults = {
+      total: 100,
+      breakdown: {
+        quiz1Points: 40,
+        game4Points: 40,
+        game2TimePoints: 10,
+        game3TimePoints: 10,
+      },
+      raw: {
+        quiz1Score: QUESTIONS.length,
+        quiz1Total: QUESTIONS.length,
+        game4Score: GAME4_QUESTIONS.length,
+        game4Total: GAME4_QUESTIONS.length,
+        game2DurationSec: 0,
+        game3DurationSec: 0,
+      },
+    };
+  }
+
+  emitSessionStateToRoom(roomCode);
+  socket.emit("devSkipDone", { stage: target });
+}
+
 function startQuizFromIntro(roomCode, playerId, socket) {
   const state = ROOM_STATES[roomCode];
   if (!state || state.quizEnded) return;
@@ -1142,6 +1289,7 @@ async function startGame4(roomCode, playerId, socket) {
   runGame4(roomCode);
 }
 
+// Game 4 loop with same pacing style as Game 1.
 async function runGame4(roomCode) {
   const state = ROOM_STATES[roomCode];
   if (!state) return;
@@ -1237,6 +1385,7 @@ async function runGame4(roomCode) {
   emitSessionStateToRoom(roomCode);
 }
 
+// Game 1 loop: loading -> think -> answer -> result for each question.
 async function runQuiz(roomCode) {
   const state = ROOM_STATES[roomCode];
   if (!state) return;
@@ -1331,3 +1480,7 @@ async function runQuiz(roomCode) {
 http.listen(PORT, "0.0.0.0", () => {
   console.log(`Backend running on http://0.0.0.0:${PORT}`);
 });
+
+
+
+

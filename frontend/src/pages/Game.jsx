@@ -1,8 +1,9 @@
-﻿import { useEffect, useState } from "react";
+﻿// Jeu 1: quiz en tours avec timer partage
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { socket } from "../socket";
-
+  // Phases de la question pour animer l'interface et les transitions
 const QUESTION_PHASES = {
   INTRO: "INTRO",
   THINK: "THINK",
@@ -14,6 +15,7 @@ const QUESTION_PHASES = {
 export default function Game() {
   const { code } = useParams();
   const navigate = useNavigate();
+  const isSkipMode = import.meta.env.DEV && code === "test";
 
   const [phase, setPhase] = useState(QUESTION_PHASES.THINK);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -41,16 +43,22 @@ export default function Game() {
 
   const playerId = Number(localStorage.getItem("playerId"));
   const isOwner = ownerId && Number(ownerId) === Number(playerId);
-
+  // Tick leger pour animer la barre de temps en continu
   useEffect(() => {
     const interval = setInterval(() => setForce((x) => x + 1), 100);
     return () => clearInterval(interval);
   }, []);
-
+  // On rejoint le salon a l'arrivee sur la page
   useEffect(() => {
     socket.emit("joinRoom", code);
-  }, [code]);
-
+    if (isSkipMode) {
+      socket.emit("startDevSession", {
+        roomCode: code,
+        playerId,
+      });
+    }
+  }, [code, isSkipMode, playerId]);
+  // On branche les listeners socket pour suivre le quiz en direct
   useEffect(() => {
     socket.on("questionData", (q) => {
       setQuestion(q);
@@ -137,7 +145,7 @@ export default function Game() {
       socket.off("game2EntryOpened");
     };
   }, [code, navigate]);
-
+  // Convertit le timer serveur en progression [0..1]
   const computeProgress = () => {
     if (!startTime) return 1;
     const elapsed = Date.now() - startTime;
@@ -148,7 +156,7 @@ export default function Game() {
   };
 
   const progress = computeProgress();
-
+  // Seul le joueur actif peut envoyer une reponse
   const sendAnswer = (index) => {
     if (playerId !== activePlayerId) return;
     setChosenIndex(index);
@@ -225,6 +233,24 @@ export default function Game() {
           ) : (
             <p className="text-sm opacity-80">Déblocage du Jeu 2 en cours...</p>
           )}
+          {isSkipMode && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => {
+                sessionStorage.setItem("dev_force_max_score", "1");
+                socket.emit("devSkipStage", {
+                  roomCode: "test",
+                  stage: "game2",
+                  playerId,
+                });
+                setTimeout(() => navigate("/game2/test"), 120);
+              }}
+              className="bg-white/20 text-white px-4 py-2 rounded-xl shadow-lg font-semibold w-full mt-3"
+            >
+              Skip (score max)
+            </motion.button>
+          )}
         </motion.div>
       </div>
     );
@@ -240,6 +266,19 @@ export default function Game() {
         >
           Préparation de la question...
         </motion.div>
+        {isSkipMode && (
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => {
+              sessionStorage.setItem("dev_force_max_score", "1");
+              navigate("/game2/test");
+            }}
+            className="fixed bottom-4 right-4 z-50 bg-white text-blue-900 px-4 py-2 rounded-xl font-bold shadow-xl"
+          >
+            Skip
+          </motion.button>
+        )}
       </div>
     );
   }
@@ -276,6 +315,19 @@ export default function Game() {
             <p className="mt-3 text-sm opacity-90">{ownerOnlyMessage}</p>
           )}
         </motion.div>
+        {isSkipMode && (
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => {
+              sessionStorage.setItem("dev_force_max_score", "1");
+              navigate("/game2/test");
+            }}
+            className="fixed bottom-4 right-4 z-50 bg-white text-blue-900 px-4 py-2 rounded-xl font-bold shadow-xl"
+          >
+            Skip
+          </motion.button>
+        )}
       </div>
     );
   }
@@ -384,7 +436,41 @@ export default function Game() {
           </div>
         )}
       </motion.div>
+      {isSkipMode && (
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05 }}
+          onClick={() => {
+            sessionStorage.setItem("dev_force_max_score", "1");
+            socket.emit("devSkipStage", {
+              roomCode: "test",
+              stage: "game2",
+              playerId,
+            });
+            setTimeout(() => navigate("/game2/test"), 120);
+          }}
+          className="fixed bottom-4 right-4 z-50 bg-white text-blue-900 px-4 py-2 rounded-xl font-bold shadow-xl"
+        >
+          Skip
+        </motion.button>
+      )}
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

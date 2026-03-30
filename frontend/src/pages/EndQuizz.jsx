@@ -1,10 +1,11 @@
+﻿// Ecran de transition entre le Jeu 1 et le Jeu 2
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 
 export default function EndQuiz({ score, success }) {
   const navigate = useNavigate();
   const { code } = useParams();
-
+  // Ecran de transition entre la fin du quiz 1 et la suite
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-600 to-blue-800 flex items-center justify-center p-6 text-white">
       <motion.div
@@ -15,13 +16,13 @@ export default function EndQuiz({ score, success }) {
         <h1 className="text-3xl font-bold mb-4">Fin du Quiz</h1>
 
         <p className="text-xl opacity-90 mb-2">
-          Score de l&apos;équipe : <b>{score}/6</b>
+          Score de l&apos;Ã©quipe : <b>{score}/6</b>
         </p>
 
         {success ? (
           <>
             <p className="text-green-300 text-xl font-bold mb-6">
-              🎉 Bravo ! Vous débloquez le Jeu 2 !
+              ðŸŽ‰ Bravo ! Vous dÃ©bloquez le Jeu 2 !
             </p>
 
             <motion.button
@@ -36,7 +37,7 @@ export default function EndQuiz({ score, success }) {
         ) : (
           <>
             <p className="text-red-300 text-xl font-bold mb-6">
-              ❌ Score insuffisant… Recommencez !
+              âŒ Score insuffisantâ€¦ Recommencez !
             </p>
 
             <motion.button
@@ -53,3 +54,11 @@ export default function EndQuiz({ score, success }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+

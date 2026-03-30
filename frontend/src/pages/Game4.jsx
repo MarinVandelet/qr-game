@@ -95,19 +95,23 @@ export default function Game4() {
   const chosenIndexRef = useRef(null);
   const devRunIdRef = useRef(0);
 
+  // Garde en memoire le dernier choix utilisateur en mode test
   useEffect(() => {
     chosenIndexRef.current = chosenIndex;
   }, [chosenIndex]);
 
+  // Petit tick pour rafraichir la barre de temps
   useEffect(() => {
     const interval = setInterval(() => setTick((v) => v + 1), 100);
     return () => clearInterval(interval);
   }, []);
 
+  // Connexion au salon a l'ouverture de la page
   useEffect(() => {
     socket.emit("joinRoom", code);
   }, [code]);
 
+  // Mode test local: prepare un quiz jouable sans backend complet
   useEffect(() => {
     if (!isDevPreview) return;
     setUnlocked(true);
@@ -117,13 +121,16 @@ export default function Game4() {
     setTotal(DEV_GAME4_QUESTIONS.length);
   }, [isDevPreview]);
 
+  // Nettoyage: invalide un run test en cours au demontage
   useEffect(() => {
     return () => {
       devRunIdRef.current += 1;
     };
   }, []);
 
+  // Listeners socket pour synchroniser le quiz final
   useEffect(() => {
+    // Synchro globale de la partie (etat, score, phase)
     socket.on("sessionState", (session) => {
       if (!session?.hasSession) return;
       setOwnerId(session.ownerId || null);
@@ -179,6 +186,7 @@ export default function Game4() {
       setCorrectIndex(null);
     });
 
+    // Changement de phase diffuse par le serveur a toute l'equipe
     socket.on("game4Phase", (payload) => {
       if (isDevPreview) return;
       setPhase(payload.type);
@@ -223,6 +231,7 @@ export default function Game4() {
     };
   }, [code, navigate, isDevPreview]);
 
+  // Convertit startTime/duration en pourcentage de barre
   const computeProgress = () => {
     if (!startTime) return 1;
     const elapsed = Date.now() - startTime;
@@ -312,6 +321,7 @@ export default function Game4() {
     });
   };
 
+  // Reponse autorisee uniquement pendant la phase de reponse
   const sendAnswer = (index) => {
     if (isDevPreview) {
       if (phase !== PHASES.ANSWER) return;
@@ -466,3 +476,10 @@ export default function Game4() {
     </div>
   );
 }
+
+
+
+
+
+
+

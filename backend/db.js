@@ -1,9 +1,10 @@
+﻿// SQLite setup used by the app (players, rooms, room membership).
 const Database = require('better-sqlite3');
 
-// Création auto du fichier
+// CrÃ©ation auto du fichier
 const db = new Database('database.db');
 
-// Création des tables
+// CrÃ©ation des tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS players (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,3 +33,6 @@ db.exec(`
 `);
 
 module.exports = db;
+
+
+

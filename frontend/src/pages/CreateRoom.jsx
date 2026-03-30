@@ -1,3 +1,4 @@
+﻿// Ecran de creation de salon
 import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -11,7 +12,8 @@ export default function CreateRoom() {
   const navigate = useNavigate();
   const playerId = localStorage.getItem("playerId");
 
-  const handleCreateRoom = async () => {
+  // Cree le salon puis affiche le code a partager
+const handleCreateRoom = async () => {
     setLoading(true);
     const res = await axios.post(`${API_URL}/api/room/create`, { playerId });
     setRoomCode(res.data.code);
@@ -72,3 +74,8 @@ export default function CreateRoom() {
     </div>
   );
 }
+
+
+
+
+
