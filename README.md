@@ -1,4 +1,4 @@
-﻿# QR GAME - MMI JPO
+# QR GAME - MMI JPO
 
 Projet web multi-joueurs en temps réel (Socket.IO) pour une journée portes ouvertes MMI.
 Le parcours contient 4 épreuves en équipe, avec des transitions automatiques entre les jeux.
@@ -18,10 +18,36 @@ Le parcours contient 4 épreuves en équipe, avec des transitions automatiques e
 - DB locale: SQLite (better-sqlite3)
 - Déploiement conseillé: Nginx + PM2 sur Ubuntu
 
+## Technologies utilisées (avec logos)
+
+### Frontend
+- ![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=white&style=for-the-badge)
+- ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white&style=for-the-badge)
+- ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white&style=for-the-badge)
+- ![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?logo=framer&logoColor=white&style=for-the-badge)
+
+### Backend
+- ![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white&style=for-the-badge)
+- ![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white&style=for-the-badge)
+- ![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?logo=socketdotio&logoColor=white&style=for-the-badge)
+- ![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white&style=for-the-badge)
+
+### Déploiement / infra
+- ![Nginx](https://img.shields.io/badge/Nginx-009639?logo=nginx&logoColor=white&style=for-the-badge)
+- ![PM2](https://img.shields.io/badge/PM2-2B037A?logo=pm2&logoColor=white&style=for-the-badge)
+- ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=white&style=for-the-badge)
+- ![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white&style=for-the-badge)
+
+## Équipe projet
+- Zeinabou Bal
+- Sheinez Ben-boubaker
+- Marin Vandelet
+- Makine Mhoumadi
+
 ## Arborescence rapide
 - `frontend/` interface React
 - `backend/` API + sockets + logique des jeux
-- `deploy/` exemple conf Nginx + script de deploiment
+- `deploy/` exemple conf Nginx + script de deploiement
 
 ## Lancer en local
 ### 1) Prérequis
@@ -132,3 +158,6 @@ sudo systemctl reload nginx
 - Les fichiers `.env` ne doivent pas être versionnés.
 - Si tu changes les variables d'env backend, fais `pm2 restart ... --update-env`.
 - Si tu vois encore des anciennes versions côté navigateur, vide le cache.
+
+## Petit rappel
+Projet fait pour être simple à maintenir par une équipe étudiante: code direct, logique lisible, peu de dépendances exotiques.
