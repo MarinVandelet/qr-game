@@ -1,4 +1,4 @@
-﻿// SQLite setup used by the app (players, rooms, room membership).
+﻿// SQLite setup
 const Database = require('better-sqlite3');
 
 // CrÃ©ation auto du fichier
