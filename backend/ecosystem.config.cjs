@@ -1,4 +1,3 @@
-﻿// PM2 process config for production runs.
 module.exports = {
   apps: [
     {
