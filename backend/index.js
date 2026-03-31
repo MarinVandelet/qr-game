@@ -1,4 +1,3 @@
-﻿// Main backend entry: REST endpoints + Socket.IO room/game state sync.
 const express = require("express");
 const cors = require("cors");
 const db = require("./db");
