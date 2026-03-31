@@ -1,4 +1,4 @@
-﻿// Instance Socket.IO partagee entre les pages
+﻿// Instance Socket.IO partagée entre les pages
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "./config";
 
