@@ -1,4 +1,4 @@
-﻿/* Global theme, layout helpers and mobile-safe viewport styles. */
+﻿/* Theme global + theme mobile */
 @import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
 
 :root {
