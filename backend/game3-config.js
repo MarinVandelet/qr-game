@@ -1,4 +1,3 @@
-﻿// Ordered answer list for Game 3 (with accepted variants).
 module.exports = [
   {
     id: 1,
